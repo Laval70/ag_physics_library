@@ -61,10 +61,10 @@ class Vec2 {
 }
 class Ball {
     constructor(x, y, radius, mass) {
-        this.position = new Vector(x, y);
+        this.position = new Vec2(x, y);
         this.radius = radius;
-        this.velocity = new Vector(0, 0);
-        this.acceleration = new Vector(0, 0);
+        this.velocity = new Vec2(0, 0);
+        this.acceleration = new Vec2(0, 0);
         this.accelerationConstant = 0.3;
         this.maxspeed = 8;
         this.mass = mass;
@@ -92,7 +92,7 @@ class Ball {
     //system for applying a force on the ball
     movement() {
         //checks what way to be accelerating acording to the keyboard
-        this.acceleration = new Vector(0, 0);
+        this.acceleration = new Vec2(0, 0);
         if (keyboard.w && this.velocity.y > -this.maxspeed) {this.acceleration.y = -1}
         if (keyboard.s && this.velocity.y <  this.maxspeed) {this.acceleration.y =  1}
         if (keyboard.d && this.velocity.x <  this.maxspeed) {this.acceleration.x =  1}
@@ -103,12 +103,12 @@ class Ball {
 
         //fixes the issue of the magnitude going over maxspeed in non cardinal directions by normalising the vectors
         this.acceleration = this.acceleration.normalise();
-        this.acceleration = this.acceleration.multiply(this.accelerationConstant); //multiplying the acceleration direction with the amount to accelerate
+        this.acceleration = this.acceleration.mul(this.accelerationConstant); //multiplying the acceleration direction with the amount to accelerate
         this.velocity = this.velocity.add(this.acceleration);
 
         //stops velocity from going over max speed
         if (this.velocity.magnitude() > this.maxspeed) {
-            this.velocity = this.velocity.normalise().multiply(this.maxspeed);
+            this.velocity = this.velocity.normalise().mul(this.maxspeed);
         }
     }
 }
@@ -162,8 +162,8 @@ class Square {
 }
 class Wall {
     constructor(x1, y1, x2, y2, mass, thickness) {
-        this.pos1 = new Vector(x1, y1)
-        this.pos2 = new Vector(x2, y2)
+        this.pos1 = new Vec2(x1, y1)
+        this.pos2 = new Vec2(x2, y2)
         this.thickness = thickness
         this.mass = mass;
         if (this.mass = 0) {
@@ -177,150 +177,155 @@ class Wall {
 }
 
 
-
-
-
-////ball one
-//let ball1 = new Ball(300, 400, 40, 10);
-//
-////ball two
-//let ball2 = new Ball(600, 400, 40, 7);
-//
-//let wall1 = new Wall(200, 300, 200, 500, 0, 3 )
-//
-//let box1 = new Square(300, 600, 100, 100, 0)
-//
-//
-//function update() {
-//    clearScreen();
-//    deltatime = (Date.now() - timeLastFrame)/1000;
-//    timeLastFrame = Date.now();
-//
-//    ball1.draw("red");
-//    ball1.velocity.displayVector(ball1.position.x, ball1.position.y, 20, 2, "blue");
-//    ball1.showAccelerationVector(500, 2, "green");
-//            
-//    ball2.draw("blue");
-//    wall1.draw()
-//
-//    friction(ball1);
-//    ball1.movement();
-//    ball1.updatePosition();
-//
-//    friction(ball2);
-//    ball2.updatePosition();
-//
-//    elasticCollision(ball1, ball2);
-//    elasticCollision(ball1, wall1)
-//
-//    box1.draw();
-//
-//    box1.angle += 1;
-//    box1.simulate();
-//}
-        
-let player1 = new Square(400, 400, 80, 40);
-
-
-let lineList = [
-	[new Vec2(500, 400), new Vec2(700, 400)],
-	[new Vec2(100, 100), new Vec2(300, 200)],
-	[new Vec2(700, 400), new Vec2(900, 600)]
-];
-
-
-
-
 let timeLastFrame = Date.now();
 let deltaTime;
 
+
+//ball one
+let ball1 = new Ball(300, 400, 40, 10);
+
+//ball two
+let ball2 = new Ball(600, 400, 40, 7);
+
+let wall1 = new Wall(200, 300, 200, 500, 0, 3)
+
+let box1 = new Square(300, 600, 100, 100, 0)
+
+
 function update() {
-	clearScreen();
-	fill("black")
+    clearScreen();
+    deltaTime = (Date.now() - timeLastFrame)/1000;
+    timeLastFrame = Date.now();
 
-	// Calculationg delta time
-	deltaTime = (Date.now() - timeLastFrame) / 1000;
-	timeLastFrame = Date.now();
+    ball1.draw("red");
+    ball1.velocity.displayVector(ball1.position.x, ball1.position.y, 20, 2, "blue");
+    ball1.showAccelerationVector(500, 2, "green");
+            
+    ball2.draw("blue");
+    wall1.draw()
 
-	for (let i = 0; i < lineList.length; i++){
-		line(lineList[i][0].x, lineList[i][0].y, lineList[i][1].x, lineList[i][1].y, 2, "gray")
-	}
+    friction(ball1);
+    ball1.movement();
+    ball1.updatePosition();
 
+    friction(ball2);
+    ball2.updatePosition();
 
+    elasticCollision(ball1, ball2);
+    elasticCollision(ball1, wall1)
 
+    
+    box1.angle += 1;
+    friction(box1);
+    box1.rotation();
+    box1.draw();
+    
+}
 
+        
+//let player1 = new Square(400, 400, 80, 40);
+//
+//let lineList = [
+//	[new Vec2(500, 400), new Vec2(700, 400)],
+//	[new Vec2(100, 100), new Vec2(300, 200)],
+//	[new Vec2(700, 400), new Vec2(900, 600)]
+//];
+//
 
-
-
-	let camera = player1.position
-	let maxSteps = 100;
-	let stepSize = 0.01;
-
-	for (let i = 0; i < 180; i++){
-		let rayDirection = new Vec2(Math.cos(i*Math.PI/90), Math.sin(i*Math.PI/90))
-		let result = rayMarch(camera, rayDirection, maxSteps, stepSize);
-		if (result){
-			let playerToResultLength =  Math.sqrt((result.x - player1.position.x) ** 2 + (result.y - player1.position.y) ** 2)
-			if (playerToResultLength >= 500){
-				line(
-                    player1.position.x, 
-                    player1.position.y, 
-                    player1.position.x + (result.x - player1.position.x)/playerToResultLength * 500, 
-                    player1.position.y + (result.y - player1.position.y)/playerToResultLength * 500, 
-                    1, 
-                    "white")
-			} else {
-				line(player1.position.x, player1.position.y, result.x, result.y, 1, "white")
-			}
-		}
-		if (result === null){
-			line(player1.position.x, player1.position.y,player1.position.x + rayDirection.x * 500, player1.position.y + rayDirection.y * 500)
-		}
-	}
-
-
-
-
-
-
-	// player movement
-	if (keyboard.d) {player1.acceleration = new Vec2( 1, 0);}
-	if (keyboard.a) {player1.acceleration = new Vec2(-1, 0);}
-	if (keyboard.w) {player1.acceleration = new Vec2( 0,-1);}
-	if (keyboard.s) {player1.acceleration = new Vec2( 0, 1);}
-    if (keyboard.a && keyboard.w) {player1.acceleration = new Vec2(-1/Math.sqrt(2), -1/Math.sqrt(2))}
-    if (keyboard.d && keyboard.w) {player1.acceleration = new Vec2( 1/Math.sqrt(2), -1/Math.sqrt(2))}
-    if (keyboard.d && keyboard.s) {player1.acceleration = new Vec2( 1/Math.sqrt(2),  1/Math.sqrt(2))}
-    if (keyboard.a && keyboard.s) {player1.acceleration = new Vec2(-1/Math.sqrt(2),  1/Math.sqrt(2))}
-	if (keyboard.d && keyboard.a) {player1.acceleration.x = 0;}
-	if (keyboard.w && keyboard.s) {player1.acceleration.y = 0;}
-
-	// stops all acceleration if all movement keys are not pressed
-	if (!keyboard.s && !keyboard.w && !keyboard.a && !keyboard.d) {
-		player1.acceleration = new Vec2(0, 0);
-	}
-
-
-	player1.acceleration = player1.acceleration.mul(4);
-	player1.velocity = player1.velocity.deltaTimeAdd(player1.acceleration);
-
-	
-	
-	
-	
-	airFriction(player1);
-	
-	
-	// calculating new position
-	player1.position = player1.position.add(player1.velocity);
-	player1.position = player1.position.add(player1.velocity);
-	
-	
-	rectangle(
-		player1.position.x,
-		player1.position.y,
-		player1.width,
-		player1.hight,
-		"red"
-		);
-	}
+//
+//function update() {
+//	clearScreen();
+//	fill("black")
+//
+//	// Calculationg delta time
+//	deltaTime = (Date.now() - timeLastFrame) / 1000;
+//	timeLastFrame = Date.now();
+//
+//	for (let i = 0; i < lineList.length; i++){
+//		line(lineList[i][0].x, lineList[i][0].y, lineList[i][1].x, lineList[i][1].y, 2, "gray")
+//	}
+//
+//
+//
+//
+//
+//
+//
+//	let camera = player1.position
+//	let maxSteps = 100;
+//	let stepSize = 0.01;
+//
+//	for (let i = 0; i < 180; i++){
+//		let rayDirection = new Vec2(Math.cos(i*Math.PI/90), Math.sin(i*Math.PI/90))
+//		let result = rayMarch(camera, rayDirection, maxSteps, stepSize);
+//		if (result){
+//			let playerToResultLength =  Math.sqrt((result.x - player1.position.x) ** 2 + (result.y - player1.position.y) ** 2)
+//			if (playerToResultLength >= 500){
+//				line(
+//                    player1.position.x, 
+//                    player1.position.y, 
+//                    player1.position.x + (result.x - player1.position.x)/playerToResultLength * 500, 
+//                    player1.position.y + (result.y - player1.position.y)/playerToResultLength * 500, 
+//                    1, 
+//                    "white")
+//			} else {
+//				line(
+//                    player1.position.x, 
+//                    player1.position.y, 
+//                    result.x, 
+//                    result.y, 
+//                    1, "white"
+//                )
+//			}
+//		}
+//		if (result === null){
+//			line(player1.position.x, player1.position.y,player1.position.x + rayDirection.x * 500, player1.position.y + rayDirection.y * 500)
+//		}
+//	}
+//
+//
+//
+//
+//
+//
+//	// player movement
+//	if (keyboard.d) {player1.acceleration = new Vec2( 1, 0);}
+//	if (keyboard.a) {player1.acceleration = new Vec2(-1, 0);}
+//	if (keyboard.w) {player1.acceleration = new Vec2( 0,-1);}
+//	if (keyboard.s) {player1.acceleration = new Vec2( 0, 1);}
+//    if (keyboard.a && keyboard.w) {player1.acceleration = new Vec2(-1/Math.sqrt(2), -1/Math.sqrt(2))}
+//    if (keyboard.d && keyboard.w) {player1.acceleration = new Vec2( 1/Math.sqrt(2), -1/Math.sqrt(2))}
+//    if (keyboard.d && keyboard.s) {player1.acceleration = new Vec2( 1/Math.sqrt(2),  1/Math.sqrt(2))}
+//    if (keyboard.a && keyboard.s) {player1.acceleration = new Vec2(-1/Math.sqrt(2),  1/Math.sqrt(2))}
+//	if (keyboard.d && keyboard.a) {player1.acceleration.x = 0;}
+//	if (keyboard.w && keyboard.s) {player1.acceleration.y = 0;}
+//
+//	// stops all acceleration if all movement keys are not pressed
+//	if (!keyboard.s && !keyboard.w && !keyboard.a && !keyboard.d) {
+//		player1.acceleration = new Vec2(0, 0);
+//	}
+//
+//
+//	player1.acceleration = player1.acceleration.mul(4);
+//	player1.velocity = player1.velocity.deltaTimeAdd(player1.acceleration);
+//
+//	
+//	
+//	
+//	
+//	friction(player1);
+//	
+//	
+//	// calculating new position
+//	player1.position = player1.position.add(player1.velocity);
+//	player1.position = player1.position.add(player1.velocity);
+//	
+//	
+//	rectangle(
+//		player1.position.x,
+//		player1.position.y,
+//		player1.width,
+//		player1.hight,
+//		"red"
+//		);
+//	}
