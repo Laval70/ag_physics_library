@@ -1,148 +1,64 @@
-let timeLastFrame = Date.now();
-let deltatime = 0;
 
 
-//proportionally reduces velocity to simulate friction
-function friction(object) {
-    object.velocity = object.velocity.deltaTimeAdd(object.velocity.multiply(-2));
-}
 
-//gets the number of pixels two objects have moved into each other between frames
-function getPentrationDepth(object1, object2) {
-    let Distance = distance(object1.position.x, object1.position.y, object2.position.x, object2.position.y);
-    if (Distance <= object1.radius + object2.radius) {
-        return object1.radius + object2.radius - Distance;
-    } else {return 0}
-}
-
-//moves the two objects away from each other along the collision normal so they no longer overlap
-function overlapOffset(object1, object2) {
-    let distanceVector = object1.position.substraction(object2.position);
-    let penetrationRes = distanceVector.normalise().multiply(getPentrationDepth(object1, object2)/(object1.inverseMass + object2.inverseMass));
-    object1.position = object1.position.add(penetrationRes.multiply(object1.inverseMass));
-    object2.position = object2.position.add(penetrationRes.multiply(-object2.inverseMass));
-}
-
-//function skapad av markus
-function distanceToLineSegment(p1, p2, q, returnPoint) {
-	let u = p2.substraction(p1);
-	let v = q.substraction(p1);
-
-	let dotProduct = Vector.dot(u, v);
-	let uLengthSquared = Vector.dot(u, u);
-	let t = dotProduct / uLengthSquared;
-
-    if(returnPoint == false) {
-        if (t < 0) {
-            return q.substraction(p1).magnitude();
-        } else if (t > 1) {
-            return q.substraction(p2).magnitude();
-        } else {
-            let projection = p1.add(u.multiply(t));
-            return q.substraction(projection).magnitude();
-        }
-    } else if (returnPoint == true) {
-        if (t < 0) {
-            return p1
-        } else if (t > 1) {
-            return p2;
-        } else {
-            return p1.add(u.multiply(t));
-        }
-    }
-	
-}
-
-//simulates elastic collision
-function elasticCollision(object1, object2) {
-
-    //checks if the collision is between two balls
-    if (object1 instanceof Ball && object2 instanceof Ball) {
-        let distanceVector = object1.position.substraction(object2.position);
-        if (distanceVector.magnitude() <= object1.radius + object2.radius) {
-
-            //avoids dividing 0 in the overlap function and calls it
-            if (getPentrationDepth(object1, object2) != 0) {
-                overlapOffset(object1, object2);
-            }
-
-            //gets the dot product of the balls velocity along the normal of the collision and swaps them between the balls 
-            let relativeVelocity = object1.velocity.substraction(object2.velocity);
-            let seperatingVelocity = Vector.dot(relativeVelocity, distanceVector.normalise());
-            let new_seperatingVelocity = -seperatingVelocity;
-
-            //taking mass into the ecvation
-            let seperatingVelocityDiffrence = new_seperatingVelocity - seperatingVelocity;
-            let impulse = seperatingVelocityDiffrence/(object1.inverseMass + object2.inverseMass);
-            let impulseVector = distanceVector.normalise().multiply(impulse);
-
-            object1.velocity = object1.velocity.add(impulseVector.multiply(object1.inverseMass));
-            object2.velocity = object2.velocity.add(impulseVector.multiply(-object2.inverseMass));
-        }
-    } else if (object1 instanceof Ball && object2 instanceof Wall) {
-        let penetrationDepth = distanceToLineSegment(object2.pos1, object2.pos2, object1.position, false)
-        if (penetrationDepth < object1.radius + object2.thickness) {
-            let distanceVector = object1.position.substraction(distanceToLineSegment(object2.pos1, object2.pos2, object1.position, true))
-            let penetrationRes = distanceVector.normalise().multiply(object1.radius + object2.thickness - penetrationDepth)
-            object1.position = object1.position.add(penetrationRes);
-        }
-
-
-    }
-}
 
 //a class representing vectors and adds functions for vector operations
-class Vector {
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
+class Vec2 {
+    constructor(_x, _y) {
+        this.x = _x;
+        this.y = _y;
     }
 
     add(vector) {
-        return new Vector(this.x + vector.x, this.y + vector.y);
+        return new Vec2(this.x + vector.x, this.y + vector.y);
     }
 
-    substraction(vector) {
-        return new Vector(this.x - vector.x, this.y - vector.y);
-    }
+    sub(v) {
+		return new Vec2(this.x - v.x, this.y - v.y);
+	}
 
     magnitude() {
         return Math.sqrt(this.x**2 + this.y**2);
     }
 
-    multiply(multiplyer) {
-        return new Vector(this.x * multiplyer, this.y * multiplyer);
-    }
+    mul(scalar) {
+		return new Vec2(this.x * scalar, this.y * scalar);
+	}
 
     pow(exponent) {
-        return new Vector(this.x ** exponent, this.y ** exponent)
+        return new Vec2(this.x ** exponent, this.y ** exponent)
     }
 
     normalise() {
         if (this.magnitude() === 0) { 
-            return new Vector(0, 0);
+            return new Vec2(0, 0);
         } else {
-            return new Vector(this.x/this.magnitude(), this.y/this.magnitude());
+            return new Vec2(this.x/this.magnitude(), this.y/this.magnitude());
         }
     }
                 
     //displayes the vector from a costom origo for trubbleshooting purposes
-    displayVector(pos_x, pos_y, multiplyer, thickness, color) {
-        line(pos_x, pos_y, pos_x + this.x* multiplyer, pos_y + this.y* multiplyer, thickness, color);
+    displayVector(pos_x, pos_y, scalar, thickness, color) {
+        line(
+            pos_x, 
+            pos_y, 
+            pos_x + this.x * scalar, 
+            pos_y + this.y * scalar, 
+            thickness, 
+            color
+        );
     }
 
     //gets the dot product
-    static dot(vector1, vector2){
-        return vector1.x*vector2.x + vector1.y*vector2.y;
-    }
+    dot(v) {
+		return this.x * v.x + this.y * v.y;
+	}
 
     //adds to vectors but takes deltaTime into a count
-    deltaTimeAdd(vector) {
-        return new Vector(this.x + vector.x * deltatime, this.y + vector.y * deltatime);
-    }
-
+    deltaTimeAdd(v) {
+		return new Vec2(this.x + v.x * deltaTime, this.y + v.y * deltaTime);
+	}
 }
-
 class Ball {
     constructor(x, y, radius, mass) {
         this.position = new Vector(x, y);
@@ -196,25 +112,27 @@ class Ball {
         }
     }
 }
-
-
 class Square {
     constructor(x, y, hight, width, angle) {
-        this.position = new Vector(x, y);
+        this.position = new Vec2(x, y);
         this.angle = angle;
         this.radians = this.angle * Math.PI / 180;
-        this.velocity = new Vector(0, 0)
+        this.velocity = new Vec2(0, 0)
+        this.width = width;
+		this.hight = hight;
+        this.acceleration = new Vec2(0, 0);
+		this.accelerationConstant = 20;
 
         //uses trig rotation och the hight and width to calculate the 4 corners 
-        this.tempP1 = new Vector(-width/2, hight/2)
-        this.tempP2 = new Vector(width/2, hight/2)
-        this.tempP3 = new Vector(-width/2, -hight/2)
-        this.tempP4 = new Vector(width/2, -hight/2)
+        this.tempP1 = new Vec2(-width/2, hight/2)
+        this.tempP2 = new Vec2(width/2, hight/2)
+        this.tempP3 = new Vec2(-width/2, -hight/2)
+        this.tempP4 = new Vec2(width/2, -hight/2)
 
-        this.p1 = this.position.add(new Vector(this.tempP1.x * Math.cos(this.radians) - this.tempP1.y * Math.sin(this.radians), this.tempP1.x * Math.sin(this.radians) + this.tempP1.y * Math.cos(this.radians)))
-        this.p2 = this.position.add(new Vector(this.tempP2.x * Math.cos(this.radians) - this.tempP2.y * Math.sin(this.radians), this.tempP2.x * Math.sin(this.radians) + this.tempP2.y * Math.cos(this.radians)))
-        this.p3 = this.position.add(new Vector(this.tempP3.x * Math.cos(this.radians) - this.tempP3.y * Math.sin(this.radians), this.tempP3.x * Math.sin(this.radians) + this.tempP3.y * Math.cos(this.radians)))
-        this.p4 = this.position.add(new Vector(this.tempP4.x * Math.cos(this.radians) - this.tempP4.y * Math.sin(this.radians), this.tempP4.x * Math.sin(this.radians) + this.tempP4.y * Math.cos(this.radians)))
+        this.p1 = this.position.add(new Vec2(this.tempP1.x * Math.cos(this.radians) - this.tempP1.y * Math.sin(this.radians), this.tempP1.x * Math.sin(this.radians) + this.tempP1.y * Math.cos(this.radians)))
+        this.p2 = this.position.add(new Vec2(this.tempP2.x * Math.cos(this.radians) - this.tempP2.y * Math.sin(this.radians), this.tempP2.x * Math.sin(this.radians) + this.tempP2.y * Math.cos(this.radians)))
+        this.p3 = this.position.add(new Vec2(this.tempP3.x * Math.cos(this.radians) - this.tempP3.y * Math.sin(this.radians), this.tempP3.x * Math.sin(this.radians) + this.tempP3.y * Math.cos(this.radians)))
+        this.p4 = this.position.add(new Vec2(this.tempP4.x * Math.cos(this.radians) - this.tempP4.y * Math.sin(this.radians), this.tempP4.x * Math.sin(this.radians) + this.tempP4.y * Math.cos(this.radians)))
     }
 
     draw() {
@@ -235,29 +153,13 @@ class Square {
         this.radians = this.angle * Math.PI / 180;
 
         //updates rotation
-        this.p1 = this.position.add(new Vector(this.tempP1.x * Math.cos(this.radians) - this.tempP1.y * Math.sin(this.radians), this.tempP1.x * Math.sin(this.radians) + this.tempP1.y * Math.cos(this.radians)))
-        this.p2 = this.position.add(new Vector(this.tempP2.x * Math.cos(this.radians) - this.tempP2.y * Math.sin(this.radians), this.tempP2.x * Math.sin(this.radians) + this.tempP2.y * Math.cos(this.radians)))
-        this.p3 = this.position.add(new Vector(this.tempP3.x * Math.cos(this.radians) - this.tempP3.y * Math.sin(this.radians), this.tempP3.x * Math.sin(this.radians) + this.tempP3.y * Math.cos(this.radians)))
-        this.p4 = this.position.add(new Vector(this.tempP4.x * Math.cos(this.radians) - this.tempP4.y * Math.sin(this.radians), this.tempP4.x * Math.sin(this.radians) + this.tempP4.y * Math.cos(this.radians)))
+        this.p1 = this.position.add(new Vec2(this.tempP1.x * Math.cos(this.radians) - this.tempP1.y * Math.sin(this.radians), this.tempP1.x * Math.sin(this.radians) + this.tempP1.y * Math.cos(this.radians)))
+        this.p2 = this.position.add(new Vec2(this.tempP2.x * Math.cos(this.radians) - this.tempP2.y * Math.sin(this.radians), this.tempP2.x * Math.sin(this.radians) + this.tempP2.y * Math.cos(this.radians)))
+        this.p3 = this.position.add(new Vec2(this.tempP3.x * Math.cos(this.radians) - this.tempP3.y * Math.sin(this.radians), this.tempP3.x * Math.sin(this.radians) + this.tempP3.y * Math.cos(this.radians)))
+        this.p4 = this.position.add(new Vec2(this.tempP4.x * Math.cos(this.radians) - this.tempP4.y * Math.sin(this.radians), this.tempP4.x * Math.sin(this.radians) + this.tempP4.y * Math.cos(this.radians)))
         
     }
-
-    updatePosition() {
-        //updates the position acording to velocity
-        this.position = this.position.add(this.velocity)
-    }
-
-    //automaticaly calls all physics related functions for easier integration
-    simulate() {
-        this.rotation()
-
-        this.updatePosition()
-
-        friction(this)
-    }
-
 }
-
 class Wall {
     constructor(x1, y1, x2, y2, mass, thickness) {
         this.pos1 = new Vector(x1, y1)
@@ -272,46 +174,153 @@ class Wall {
     draw() {
         line(this.pos1.x, this.pos1.y, this.pos2.x, this.pos2.y, this.thickness, "black")
     }
-
-
 }
 
-//ball one
-let ball1 = new Ball(300, 400, 40, 10);
 
-//ball two
-let ball2 = new Ball(600, 400, 40, 7);
 
-let wall1 = new Wall(200, 300, 200, 500, 0, 3 )
 
-let box1 = new Square(300, 600, 100, 100, 0)
 
+////ball one
+//let ball1 = new Ball(300, 400, 40, 10);
+//
+////ball two
+//let ball2 = new Ball(600, 400, 40, 7);
+//
+//let wall1 = new Wall(200, 300, 200, 500, 0, 3 )
+//
+//let box1 = new Square(300, 600, 100, 100, 0)
+//
+//
+//function update() {
+//    clearScreen();
+//    deltatime = (Date.now() - timeLastFrame)/1000;
+//    timeLastFrame = Date.now();
+//
+//    ball1.draw("red");
+//    ball1.velocity.displayVector(ball1.position.x, ball1.position.y, 20, 2, "blue");
+//    ball1.showAccelerationVector(500, 2, "green");
+//            
+//    ball2.draw("blue");
+//    wall1.draw()
+//
+//    friction(ball1);
+//    ball1.movement();
+//    ball1.updatePosition();
+//
+//    friction(ball2);
+//    ball2.updatePosition();
+//
+//    elasticCollision(ball1, ball2);
+//    elasticCollision(ball1, wall1)
+//
+//    box1.draw();
+//
+//    box1.angle += 1;
+//    box1.simulate();
+//}
+        
+let player1 = new Square(400, 400, 80, 40);
+
+
+let lineList = [
+	[new Vec2(500, 400), new Vec2(700, 400)],
+	[new Vec2(100, 100), new Vec2(300, 200)],
+	[new Vec2(700, 400), new Vec2(900, 600)]
+];
+
+
+
+
+let timeLastFrame = Date.now();
+let deltaTime;
 
 function update() {
-    clearScreen();
-    deltatime = (Date.now() - timeLastFrame)/1000;
-    timeLastFrame = Date.now();
+	clearScreen();
+	fill("black")
 
-    ball1.draw("red");
-    ball1.velocity.displayVector(ball1.position.x, ball1.position.y, 20, 2, "blue");
-    ball1.showAccelerationVector(500, 2, "green");
-            
-    ball2.draw("blue");
-    wall1.draw()
+	// Calculationg delta time
+	deltaTime = (Date.now() - timeLastFrame) / 1000;
+	timeLastFrame = Date.now();
 
-    friction(ball1);
-    ball1.movement();
-    ball1.updatePosition();
+	for (let i = 0; i < lineList.length; i++){
+		line(lineList[i][0].x, lineList[i][0].y, lineList[i][1].x, lineList[i][1].y, 2, "gray")
+	}
 
-    friction(ball2);
-    ball2.updatePosition();
 
-    elasticCollision(ball1, ball2);
-    elasticCollision(ball1, wall1)
 
-    box1.draw();
 
-    box1.angle += 1;
-    box1.simulate();
-}
-        
+
+
+
+	let camera = player1.position
+	let maxSteps = 100;
+	let stepSize = 0.01;
+
+	for (let i = 0; i < 180; i++){
+		let rayDirection = new Vec2(Math.cos(i*Math.PI/90), Math.sin(i*Math.PI/90))
+		let result = rayMarch(camera, rayDirection, maxSteps, stepSize);
+		if (result){
+			let playerToResultLength =  Math.sqrt((result.x - player1.position.x) ** 2 + (result.y - player1.position.y) ** 2)
+			if (playerToResultLength >= 500){
+				line(
+                    player1.position.x, 
+                    player1.position.y, 
+                    player1.position.x + (result.x - player1.position.x)/playerToResultLength * 500, 
+                    player1.position.y + (result.y - player1.position.y)/playerToResultLength * 500, 
+                    1, 
+                    "white")
+			} else {
+				line(player1.position.x, player1.position.y, result.x, result.y, 1, "white")
+			}
+		}
+		if (result === null){
+			line(player1.position.x, player1.position.y,player1.position.x + rayDirection.x * 500, player1.position.y + rayDirection.y * 500)
+		}
+	}
+
+
+
+
+
+
+	// player movement
+	if (keyboard.d) {player1.acceleration = new Vec2( 1, 0);}
+	if (keyboard.a) {player1.acceleration = new Vec2(-1, 0);}
+	if (keyboard.w) {player1.acceleration = new Vec2( 0,-1);}
+	if (keyboard.s) {player1.acceleration = new Vec2( 0, 1);}
+    if (keyboard.a && keyboard.w) {player1.acceleration = new Vec2(-1/Math.sqrt(2), -1/Math.sqrt(2))}
+    if (keyboard.d && keyboard.w) {player1.acceleration = new Vec2( 1/Math.sqrt(2), -1/Math.sqrt(2))}
+    if (keyboard.d && keyboard.s) {player1.acceleration = new Vec2( 1/Math.sqrt(2),  1/Math.sqrt(2))}
+    if (keyboard.a && keyboard.s) {player1.acceleration = new Vec2(-1/Math.sqrt(2),  1/Math.sqrt(2))}
+	if (keyboard.d && keyboard.a) {player1.acceleration.x = 0;}
+	if (keyboard.w && keyboard.s) {player1.acceleration.y = 0;}
+
+	// stops all acceleration if all movement keys are not pressed
+	if (!keyboard.s && !keyboard.w && !keyboard.a && !keyboard.d) {
+		player1.acceleration = new Vec2(0, 0);
+	}
+
+
+	player1.acceleration = player1.acceleration.mul(4);
+	player1.velocity = player1.velocity.deltaTimeAdd(player1.acceleration);
+
+	
+	
+	
+	
+	airFriction(player1);
+	
+	
+	// calculating new position
+	player1.position = player1.position.add(player1.velocity);
+	player1.position = player1.position.add(player1.velocity);
+	
+	
+	rectangle(
+		player1.position.x,
+		player1.position.y,
+		player1.width,
+		player1.hight,
+		"red"
+		);
+	}
