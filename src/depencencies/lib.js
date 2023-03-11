@@ -1,5 +1,31 @@
-function airFriction(object) {
-	object.velocity = object.velocity.deltaTimeAdd(object.velocity.mul(-2));
+//function skapad av markus
+function distanceToLineSegment(p1, p2, q, returnPoint) {
+	let u = p2.sub(p1);
+	let v = q.sub(p1);
+
+	let dotProduct = u.dot(v);
+	let uLengthSquared = u.dot(u);
+	let t = dotProduct / uLengthSquared;
+
+    if(returnPoint == false) {
+        if (t < 0) {
+            return q.sub(p1).magnitude();
+        } else if (t > 1) {
+            return q.sub(p2).magnitude();
+        } else {
+            let projection = p1.add(u.mul(t));
+            return q.sub(projection).magnitude();
+        }
+    } else if (returnPoint == true) {
+        if (t < 0) {
+            return p1
+        } else if (t > 1) {
+            return p2;
+        } else {
+            return p1.add(u.mul(t));
+        }
+    }
+	
 }
 
 function distanceToLineSegment(p1, p2, q) {
@@ -45,7 +71,7 @@ function rayMarch(camera, rayDirection, maxSteps, stepSize) {
 
 //proportionally reduces velocity to simulate friction
 function friction(object) {
-    object.velocity = object.velocity.deltaTimeAdd(object.velocity.multiply(-2));
+    object.velocity = object.velocity.deltaTimeAdd(object.velocity.mul(-2));
 }
 
 //gets the number of pixels two objects have moved into each other between frames
@@ -58,48 +84,18 @@ function getPentrationDepth(object1, object2) {
 
 //moves the two objects away from each other along the collision normal so they no longer overlap
 function overlapOffset(object1, object2) {
-    let distanceVector = object1.position.substraction(object2.position);
-    let penetrationRes = distanceVector.normalise().multiply(getPentrationDepth(object1, object2)/(object1.inverseMass + object2.inverseMass));
-    object1.position = object1.position.add(penetrationRes.multiply(object1.inverseMass));
-    object2.position = object2.position.add(penetrationRes.multiply(-object2.inverseMass));
+    let distanceVector = object1.position.sub(object2.position);
+    let penetrationRes = distanceVector.normalise().mul(getPentrationDepth(object1, object2)/(object1.inverseMass + object2.inverseMass));
+    object1.position = object1.position.add(penetrationRes.mul(object1.inverseMass));
+    object2.position = object2.position.add(penetrationRes.mul(-object2.inverseMass));
 }
-
-////function skapad av markus
-//function distanceToLineSegment(p1, p2, q, returnPoint) {
-//	let u = p2.substraction(p1);
-//	let v = q.substraction(p1);
-//
-//	let dotProduct = Vector.dot(u, v);
-//	let uLengthSquared = Vector.dot(u, u);
-//	let t = dotProduct / uLengthSquared;
-//
-//    if(returnPoint == false) {
-//        if (t < 0) {
-//            return q.substraction(p1).magnitude();
-//        } else if (t > 1) {
-//            return q.substraction(p2).magnitude();
-//        } else {
-//            let projection = p1.add(u.multiply(t));
-//            return q.substraction(projection).magnitude();
-//        }
-//    } else if (returnPoint == true) {
-//        if (t < 0) {
-//            return p1
-//        } else if (t > 1) {
-//            return p2;
-//        } else {
-//            return p1.add(u.multiply(t));
-//        }
-//    }
-//	
-//}
 
 //simulates elastic collision
 function elasticCollision(object1, object2) {
 
     //checks if the collision is between two balls
     if (object1 instanceof Ball && object2 instanceof Ball) {
-        let distanceVector = object1.position.substraction(object2.position);
+        let distanceVector = object1.position.sub(object2.position);
         if (distanceVector.magnitude() <= object1.radius + object2.radius) {
 
             //avoids dividing 0 in the overlap function and calls it
@@ -108,23 +104,23 @@ function elasticCollision(object1, object2) {
             }
 
             //gets the dot product of the balls velocity along the normal of the collision and swaps them between the balls 
-            let relativeVelocity = object1.velocity.substraction(object2.velocity);
-            let seperatingVelocity = Vector.dot(relativeVelocity, distanceVector.normalise());
+            let relativeVelocity = object1.velocity.sub(object2.velocity);
+            let seperatingVelocity = relativeVelocity.dot(distanceVector.normalise());
             let new_seperatingVelocity = -seperatingVelocity;
 
             //taking mass into the ecvation
             let seperatingVelocityDiffrence = new_seperatingVelocity - seperatingVelocity;
             let impulse = seperatingVelocityDiffrence/(object1.inverseMass + object2.inverseMass);
-            let impulseVector = distanceVector.normalise().multiply(impulse);
+            let impulseVector = distanceVector.normalise().mul(impulse);
 
-            object1.velocity = object1.velocity.add(impulseVector.multiply(object1.inverseMass));
-            object2.velocity = object2.velocity.add(impulseVector.multiply(-object2.inverseMass));
+            object1.velocity = object1.velocity.add(impulseVector.mul(object1.inverseMass));
+            object2.velocity = object2.velocity.add(impulseVector.mul(-object2.inverseMass));
         }
     } else if (object1 instanceof Ball && object2 instanceof Wall) {
         let penetrationDepth = distanceToLineSegment(object2.pos1, object2.pos2, object1.position, false)
         if (penetrationDepth < object1.radius + object2.thickness) {
-            let distanceVector = object1.position.substraction(distanceToLineSegment(object2.pos1, object2.pos2, object1.position, true))
-            let penetrationRes = distanceVector.normalise().multiply(object1.radius + object2.thickness - penetrationDepth)
+            let distanceVector = object1.position.sub(distanceToLineSegment(object2.pos1, object2.pos2, object1.position, true))
+            let penetrationRes = distanceVector.normalise().mul(object1.radius + object2.thickness - penetrationDepth)
             object1.position = object1.position.add(penetrationRes);
         }
     }
