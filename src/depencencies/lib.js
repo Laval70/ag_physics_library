@@ -13,7 +13,7 @@ function getPentrationDepth(object1, object2, distance) {
 //moves the two objects away from each other along the collision normal so they no longer overlap
 function overlapOffset(object1, object2) {
     let distanceVector = object1.position.sub(object2.position);
-    let penetrationRes = distanceVector.normalise().mul(getPentrationDepth(object1, object2)/(object1.inverseMass + object2.inverseMass, distanceVector.magnitude()));
+    let penetrationRes = distanceVector.normalise().mul(getPentrationDepth(object1, object2, distanceVector.magnitude())/(object1.inverseMass + object2.inverseMass));
     object1.position = object1.position.add(penetrationRes.mul(object1.inverseMass));
     object2.position = object2.position.add(penetrationRes.mul(-object2.inverseMass));
 }
@@ -46,30 +46,13 @@ function distanceToLineSegment(p1, p2, q, returnPoint) {
         }
     }
 }
-function distanceToLineSegment(p1, p2, q) {
-	let u = p2.sub(p1);
-	let v = q.sub(p1);
-
-	let dotProduct = u.dot(v);
-	let uLengthSquared = u.dot(u);
-	let t = dotProduct / uLengthSquared;
-
-	if (t < 0) {
-		return q.sub(p1).magnitude();
-	} else if (t > 1) {
-		return q.sub(p2).magnitude();
-	} else {
-		let projection = p1.add(u.mul(t));
-		return q.sub(projection).magnitude();
-	}
-}
 
 function findClosestLine(lineList, q) {
 	let closestDistance = Infinity;
 	for (let i = 0; i < lineList.length; i++) {
 		let p1 = lineList[i][0];
 		let p2 = lineList[i][1];
-		let distance = distanceToLineSegment(p1, p2, q);
+		let distance = distanceToLineSegment(p1, p2, q, false);
 		closestDistance = Math.min(closestDistance, distance);
 	}
 	return closestDistance;
