@@ -46,24 +46,8 @@ function distanceToLineSegment(p1, p2, q, returnPoint) {
         }
     }
 }
-function distanceToLineSegment(p1, p2, q) {
-	let u = p2.sub(p1);
-	let v = q.sub(p1);
 
-	let dotProduct = u.dot(v);
-	let uLengthSquared = u.dot(u);
-	let t = dotProduct / uLengthSquared;
-
-	if (t < 0) {
-		return q.sub(p1).magnitude();
-	} else if (t > 1) {
-		return q.sub(p2).magnitude();
-	} else {
-		let projection = p1.add(u.mul(t));
-		return q.sub(projection).magnitude();
-	}
-}
-
+// Will need updating to new way of organising vertices and lines
 function findClosestLine(lineList, q) {
 	let closestDistance = Infinity;
 	for (let i = 0; i < lineList.length; i++) {
@@ -86,6 +70,32 @@ function rayMarch(camera, rayDirection, maxSteps, stepSize) {
 	}
 	return null;
 }
+
+function tringle(A, B, C, color){
+    let tringle = new Path2D();
+    tringle.moveTo(A.x, A.y);
+    tringle.lineTo(B.x, B.y);
+    tringle.lineTo(C.x, C.y);
+    tringle.closePath();
+
+    ctx.fillStyle = color;
+    ctx.fill(tringle)
+}
+function circle(ctx, x, y, radius, color) {
+    let circle = new Path2D();
+    circle.arc(x, y, radius, 0, Math.PI*2, true);
+    circle.closePath();
+
+    ctx.fillStyle = color;
+    ctx.fill(circle);
+}
+
+function shadow(A, B){
+    let C = A.sub(player.position).normalise().mul(2000).add(player.position);
+    let D = B.sub(player.position).normalise().mul(2000).add(player.position);
+    tringle(A, B, C, "hsla(1, 100%, 0%, 0.9)");
+    tringle(B, C, D, "hsla(1, 100%, 0%, 0.9)");
+};
 
 //simulates elastic collision
 function elasticCollision(object1, object2){

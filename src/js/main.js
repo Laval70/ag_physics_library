@@ -1,8 +1,13 @@
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d")
 
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
 
 
 //a class representing vectors and adds functions for vector operations
+// Will Need updating to Canvas2D
 class Vec2 {
     constructor(_x, _y) {
         this.x = _x;
@@ -59,6 +64,7 @@ class Vec2 {
 		return new Vec2(this.x + v.x * deltaTime, this.y + v.y * deltaTime);
 	}
 }
+// Will Need updating to Canvas2D
 class Ball {
     constructor(x, y, radius, mass) {
         this.position = new Vec2(x, y);
@@ -74,14 +80,11 @@ class Ball {
             this.inverseMass = 1/this.mass;
         }
     }
-
+    // Will Need updating to Canvas2D
     draw(color) {
-        circle(this.position.x, this.position.y, this.radius, color);
+        circle(ctx ,this.position.x, this.position.y, this.radius, color);
     }
-
-    showAccelerationVector(multiplyer, thickness, color){
-        line(this.position.x, this.position.y, this.position.x + this.acceleration.x* multiplyer, this.position.y + this.acceleration.y* multiplyer, thickness, color);
-    }
+    
 
     //update actual position acording to velocity
     updatePosition() {
@@ -90,6 +93,7 @@ class Ball {
     }
 
     //system for applying a force on the ball
+    // Will Need updating to Canvas2D
     movement() {
         //checks what way to be accelerating acording to the keyboard
         this.acceleration = new Vec2(0, 0);
@@ -112,6 +116,7 @@ class Ball {
         }
     }
 }
+// Will Need updating to Canvas2D
 class Square {
     constructor(x, y, hight, width, angle) {
         this.position = new Vec2(x, y);
@@ -160,6 +165,7 @@ class Square {
         
     }
 }
+// Will Need updating to Canvas2D
 class Wall {
     constructor(x1, y1, x2, y2, mass, thickness) {
         this.pos1 = new Vec2(x1, y1)
@@ -191,141 +197,67 @@ let wall1 = new Wall(200, 300, 200, 500, 0, 3)
 
 let box1 = new Square(300, 600, 100, 100, 0)
 
-
-function update() {
-    clearScreen();
-    deltaTime = (Date.now() - timeLastFrame)/1000;
-    timeLastFrame = Date.now();
-
-    ball1.draw("red");
-    ball1.velocity.displayVector(ball1.position.x, ball1.position.y, 20, 2, "blue");
-    ball1.showAccelerationVector(500, 2, "green");
-            
-    ball2.draw("blue");
-    wall1.draw()
-
-    friction(ball1);
-    ball1.movement();
-    ball1.updatePosition();
-
-    friction(ball2);
-    ball2.updatePosition();
-
-    elasticCollision(ball1, ball2);
-    elasticCollision(ball1, wall1)
-
-    
-    box1.angle += 1;
-    friction(box1);
-    box1.rotation();
-    box1.draw();
-    
+const player = {
+    position: new Vec2(400, 300),
+    dp: new Vec2(2,2),
+    radius: 800
 }
 
-        
-//let player1 = new Square(400, 400, 80, 40);
-//
-//let lineList = [
-//	[new Vec2(500, 400), new Vec2(700, 400)],
-//	[new Vec2(100, 100), new Vec2(300, 200)],
-//	[new Vec2(700, 400), new Vec2(900, 600)]
-//];
-//
+lineList = [
+    [new Vec2(200,200), new Vec2(400,200), new Vec2(400,400), new Vec2(200,400)], // quad 1
+    [new Vec2(700,300), new Vec2(900,400), new Vec2(900,200), new Vec2(700,100)], // quad 2
+    [new Vec2(400,700), new Vec2(400,900), new Vec2(700,900), new Vec2(700,800)], // quad 3
+    [new Vec2(900,700), new Vec2(1100,700), new Vec2(1100,900), new Vec2(900,900)], // quad 4
+];
 
-//
-//function update() {
-//	clearScreen();
-//	fill("black")
-//
-//	// Calculationg delta time
-//	deltaTime = (Date.now() - timeLastFrame) / 1000;
-//	timeLastFrame = Date.now();
-//
-//	for (let i = 0; i < lineList.length; i++){
-//		line(lineList[i][0].x, lineList[i][0].y, lineList[i][1].x, lineList[i][1].y, 2, "gray")
-//	}
-//
-//
-//
-//
-//
-//
-//
-//	let camera = player1.position
-//	let maxSteps = 100;
-//	let stepSize = 0.01;
-//
-//	for (let i = 0; i < 180; i++){
-//		let rayDirection = new Vec2(Math.cos(i*Math.PI/90), Math.sin(i*Math.PI/90))
-//		let result = rayMarch(camera, rayDirection, maxSteps, stepSize);
-//		if (result){
-//			let playerToResultLength =  Math.sqrt((result.x - player1.position.x) ** 2 + (result.y - player1.position.y) ** 2)
-//			if (playerToResultLength >= 500){
-//				line(
-//                    player1.position.x, 
-//                    player1.position.y, 
-//                    player1.position.x + (result.x - player1.position.x)/playerToResultLength * 500, 
-//                    player1.position.y + (result.y - player1.position.y)/playerToResultLength * 500, 
-//                    1, 
-//                    "white")
-//			} else {
-//				line(
-//                    player1.position.x, 
-//                    player1.position.y, 
-//                    result.x, 
-//                    result.y, 
-//                    1, "white"
-//                )
-//			}
-//		}
-//		if (result === null){
-//			line(player1.position.x, player1.position.y,player1.position.x + rayDirection.x * 500, player1.position.y + rayDirection.y * 500)
-//		}
-//	}
-//
-//
-//
-//
-//
-//
-//	// player movement
-//	if (keyboard.d) {player1.acceleration = new Vec2( 1, 0);}
-//	if (keyboard.a) {player1.acceleration = new Vec2(-1, 0);}
-//	if (keyboard.w) {player1.acceleration = new Vec2( 0,-1);}
-//	if (keyboard.s) {player1.acceleration = new Vec2( 0, 1);}
-//    if (keyboard.a && keyboard.w) {player1.acceleration = new Vec2(-1/Math.sqrt(2), -1/Math.sqrt(2))}
-//    if (keyboard.d && keyboard.w) {player1.acceleration = new Vec2( 1/Math.sqrt(2), -1/Math.sqrt(2))}
-//    if (keyboard.d && keyboard.s) {player1.acceleration = new Vec2( 1/Math.sqrt(2),  1/Math.sqrt(2))}
-//    if (keyboard.a && keyboard.s) {player1.acceleration = new Vec2(-1/Math.sqrt(2),  1/Math.sqrt(2))}
-//	if (keyboard.d && keyboard.a) {player1.acceleration.x = 0;}
-//	if (keyboard.w && keyboard.s) {player1.acceleration.y = 0;}
-//
-//	// stops all acceleration if all movement keys are not pressed
-//	if (!keyboard.s && !keyboard.w && !keyboard.a && !keyboard.d) {
-//		player1.acceleration = new Vec2(0, 0);
-//	}
-//
-//
-//	player1.acceleration = player1.acceleration.mul(4);
-//	player1.velocity = player1.velocity.deltaTimeAdd(player1.acceleration);
-//
-//	
-//	
-//	
-//	
-//	friction(player1);
-//	
-//	
-//	// calculating new position
-//	player1.position = player1.position.add(player1.velocity);
-//	player1.position = player1.position.add(player1.velocity);
-//	
-//	
-//	rectangle(
-//		player1.position.x,
-//		player1.position.y,
-//		player1.width,
-//		player1.hight,
-//		"red"
-//		);
-//	}
+
+
+// our lines can be orginized in a 2d array where the y-cord is a list of all points in a closed loop
+function renderScene(lineList){
+
+    let lightGradient = ctx.createRadialGradient(player.position.x, player.position.y, 0, player.position.x, player.position.y, player.radius);
+    lightGradient.addColorStop(0, "hsla(1, 100%, 100%, 0.75)");
+    lightGradient.addColorStop(1, "hsla(0, 100%, 0%, 0)");
+    
+    ctx.fillStyle = lightGradient;
+    ctx.fillRect(0,0, canvas.width, canvas.height);
+
+    for (shape in lineList){
+        shadow(lineList[shape][0], lineList[shape][lineList[shape].length -1]);
+        let lm = new Path2D();
+        lm.moveTo(lineList[shape][0].x,lineList[shape][0].y);
+        for (let i = 0; i<lineList[shape].length-1; i++){
+            lm.lineTo(lineList[shape][i+1].x,lineList[shape][i+1].y);
+            shadow(lineList[shape][i], lineList[shape][i+1]);
+        };
+        lm.closePath();
+        let tempLight = ctx.createRadialGradient(player.position.x, player.position.y, 0, player.position.x, player.position.y, player.radius);
+        tempLight.addColorStop(0, "hsla(1, 100%, 100%, 0.3)");
+        tempLight.addColorStop(1, "hsla(0, 100%, 0%, 0)");
+        ctx.fillStyle = tempLight;
+        ctx.fill(lm);
+
+    };
+
+    // draw all seprate objects with all the light sources
+
+}
+
+function update(){
+    requestAnimationFrame(update);
+
+    
+    ctx.fillStyle = "hsla(0, 100%, 0%, 1)";
+    ctx.fillRect(0,0, canvas.width, canvas.height);
+    
+    
+    
+    renderScene(lineList)
+
+    if (player.position.x >= canvas.width ||  player.position.x <= 0){player.dp.x *= -1}
+    if (player.position.y >= canvas.height || player.position.y <= 0){player.dp.y *= -1}
+    player.position = player.position.add(player.dp)
+
+
+};
+update();
