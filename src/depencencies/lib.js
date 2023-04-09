@@ -13,7 +13,7 @@ function getPentrationDepth(object1, object2, distance) {
 //moves the two objects away from each other along the collision normal so they no longer overlap
 function overlapOffset(object1, object2) {
     let distanceVector = object1.position.sub(object2.position);
-    let penetrationRes = distanceVector.normalise().mul(getPentrationDepth(object1, object2)/(object1.inverseMass + object2.inverseMass, distanceVector.magnitude()));
+    let penetrationRes = distanceVector.normalise().mul(getPentrationDepth(object1, object2, distanceVector.magnitude())/(object1.inverseMass + object2.inverseMass));
     object1.position = object1.position.add(penetrationRes.mul(object1.inverseMass));
     object2.position = object2.position.add(penetrationRes.mul(-object2.inverseMass));
 }
@@ -53,7 +53,7 @@ function findClosestLine(lineList, q) {
 	for (let i = 0; i < lineList.length; i++) {
 		let p1 = lineList[i][0];
 		let p2 = lineList[i][1];
-		let distance = distanceToLineSegment(p1, p2, q);
+		let distance = distanceToLineSegment(p1, p2, q, false);
 		closestDistance = Math.min(closestDistance, distance);
 	}
 	return closestDistance;
