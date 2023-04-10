@@ -5,7 +5,6 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 
-
 //a class representing vectors and adds functions for vector operations
 // Will Need updating to Canvas2D
 class Vec2 {
@@ -66,14 +65,24 @@ class Vec2 {
 }
 // Will Need updating to Canvas2D
 class Ball {
-    constructor(x, y, radius, mass) {
+    constructor(x, y, radius, mass, lightRadius) {
         this.position = new Vec2(x, y);
+
         this.radius = radius;
+        this.lightRadius = lightRadius;
+
         this.velocity = new Vec2(0, 0);
         this.acceleration = new Vec2(0, 0);
-        this.accelerationConstant = 0.3;
-        this.maxspeed = 8;
+        this.accelerationConstant = 0.1;
+
         this.mass = mass;
+
+        this.keys = {
+            a: false,
+            d: false,
+            w: false,
+            s: false,
+        };
         if (this.mass === 0) {
             this.inverseMass = 0;
         } else {
@@ -97,10 +106,10 @@ class Ball {
     movement() {
         //checks what way to be accelerating acording to the keyboard
         this.acceleration = new Vec2(0, 0);
-        if (keyboard.w && this.velocity.y > -this.maxspeed) {this.acceleration.y = -1}
-        if (keyboard.s && this.velocity.y <  this.maxspeed) {this.acceleration.y =  1}
-        if (keyboard.d && this.velocity.x <  this.maxspeed) {this.acceleration.x =  1}
-        if (keyboard.a && this.velocity.x > -this.maxspeed) {this.acceleration.x = -1}
+        if (keyboard.w) {this.acceleration.y = -1}
+        if (keyboard.s) {this.acceleration.y =  1}
+        if (keyboard.d) {this.acceleration.x =  1}
+        if (keyboard.a) {this.acceleration.x = -1}
 
         if (keyboard.w && keyboard.s) {this.acceleration.y = 0}
         if (keyboard.d && keyboard.a) {this.acceleration.x = 0}
@@ -109,11 +118,6 @@ class Ball {
         this.acceleration = this.acceleration.normalise();
         this.acceleration = this.acceleration.mul(this.accelerationConstant); //multiplying the acceleration direction with the amount to accelerate
         this.velocity = this.velocity.add(this.acceleration);
-
-        //stops velocity from going over max speed
-        if (this.velocity.magnitude() > this.maxspeed) {
-            this.velocity = this.velocity.normalise().mul(this.maxspeed);
-        }
     }
 }
 // Will Need updating to Canvas2D
@@ -183,8 +187,7 @@ class Wall {
 }
 
 
-let timeLastFrame = Date.now();
-let deltaTime;
+
 
 
 //ball one
@@ -197,13 +200,11 @@ let wall1 = new Wall(200, 300, 200, 500, 0, 3)
 
 let box1 = new Square(300, 600, 100, 100, 0)
 
-const player = {
-    position: new Vec2(400, 300),
-    dp: new Vec2(2,2),
-    radius: 800
-}
+const player = new Ball(500, 300, 40, 10, 800)
 
-lineList = [
+
+
+let pollygons = [
     [new Vec2(200,200), new Vec2(400,200), new Vec2(400,400), new Vec2(200,400)], // quad 1
     [new Vec2(700,300), new Vec2(900,400), new Vec2(900,200), new Vec2(700,100)], // quad 2
     [new Vec2(400,700), new Vec2(400,900), new Vec2(700,900), new Vec2(700,800)], // quad 3
@@ -213,29 +214,37 @@ lineList = [
 
 
 // our lines can be orginized in a 2d array where the y-cord is a list of all points in a closed loop
-function renderScene(lineList){
+function renderScene(pollygons){
 
-    let lightGradient = ctx.createRadialGradient(player.position.x, player.position.y, 0, player.position.x, player.position.y, player.radius);
+    
+    let lightGradient = ctx.createRadialGradient(player.position.x, player.position.y, 0, player.position.x, player.position.y, player.lightRadius);
     lightGradient.addColorStop(0, "hsla(1, 100%, 100%, 0.75)");
     lightGradient.addColorStop(1, "hsla(0, 100%, 0%, 0)");
     
     ctx.fillStyle = lightGradient;
     ctx.fillRect(0,0, canvas.width, canvas.height);
 
-    for (shape in lineList){
-        shadow(lineList[shape][0], lineList[shape][lineList[shape].length -1]);
-        let lm = new Path2D();
-        lm.moveTo(lineList[shape][0].x,lineList[shape][0].y);
-        for (let i = 0; i<lineList[shape].length-1; i++){
-            lm.lineTo(lineList[shape][i+1].x,lineList[shape][i+1].y);
-            shadow(lineList[shape][i], lineList[shape][i+1]);
+    for (shape in pollygons){
+
+        shadow(pollygons[shape][0], pollygons[shape][pollygons[shape].length -1]);
+
+        let shapeOutline = new Path2D();
+        shapeOutline.moveTo(pollygons[shape][0].x,pollygons[shape][0].y);
+
+        for (let i = 0; i < pollygons[shape].length-1; i++){
+
+            shapeOutline.lineTo(
+                pollygons[shape][i+1].x,
+                pollygons[shape][i+1].y
+            );
+
+            shadow(pollygons[shape][i], pollygons[shape][i+1]);
         };
-        lm.closePath();
-        let tempLight = ctx.createRadialGradient(player.position.x, player.position.y, 0, player.position.x, player.position.y, player.radius);
-        tempLight.addColorStop(0, "hsla(1, 100%, 100%, 0.3)");
-        tempLight.addColorStop(1, "hsla(0, 100%, 0%, 0)");
-        ctx.fillStyle = tempLight;
-        ctx.fill(lm);
+
+        shapeOutline.closePath();
+
+        ctx.fillStyle = "black";
+        ctx.fill(shapeOutline);
 
     };
 
@@ -243,21 +252,31 @@ function renderScene(lineList){
 
 }
 
+window.keyboard = new RoboroKeyboard()
+
+let timeLastFrame = Date.now();
+let deltaTime;
+
 function update(){
     requestAnimationFrame(update);
+    deltaTime = (Date.now() - timeLastFrame)/1000;
 
-    
+    timeLastFrame = Date.now();
+
     ctx.fillStyle = "hsla(0, 100%, 0%, 1)";
     ctx.fillRect(0,0, canvas.width, canvas.height);
     
     
+
+    player.movement()
+    player.updatePosition()
+    friction(player)
     
-    renderScene(lineList)
-
-    if (player.position.x >= canvas.width ||  player.position.x <= 0){player.dp.x *= -1}
-    if (player.position.y >= canvas.height || player.position.y <= 0){player.dp.y *= -1}
-    player.position = player.position.add(player.dp)
-
+    
+    renderScene(pollygons)
+    player.draw("red")
 
 };
 update();
+
+
