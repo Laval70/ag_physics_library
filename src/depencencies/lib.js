@@ -1,6 +1,6 @@
 //proportionally reduces velocity to simulate friction
 function friction(object) {
-    object.velocity = object.velocity.deltaTimeAdd(object.velocity.mul(-2));
+    object.velocity = object.velocity.deltaTimeAdd(object.velocity.mul(-4));
 }
 
 //gets the number of pixels two objects have moved into each other between frames
@@ -90,11 +90,11 @@ function circle(ctx, x, y, radius, color) {
     ctx.fill(circle);
 }
 
-function shadow(A, B){
-    let C = A.sub(player.position).normalise().mul(2000).add(player.position);
-    let D = B.sub(player.position).normalise().mul(2000).add(player.position);
-    tringle(A, B, C, "hsla(1, 100%, 0%, 1)");
-    tringle(B, C, D, "hsla(1, 100%, 0%, 1)");
+function shadow(A, B, Q){
+    let C = A.sub(Q).normalise().mul(60000).add(Q);
+    let D = B.sub(Q).normalise().mul(60000).add(Q);
+    tringle(A, B, C, "hsla(1, 0%, 4%, 0.65)");
+    tringle(B, C, D, "hsla(1, 0%, 4%, 0.65)");
 };
 
 //simulates elastic collision
