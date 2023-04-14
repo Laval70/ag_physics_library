@@ -76,13 +76,6 @@ class Ball {
         this.accelerationConstant = 0.1;
 
         this.mass = mass;
-
-        this.keys = {
-            a: false,
-            d: false,
-            w: false,
-            s: false,
-        };
         if (this.mass === 0) {
             this.inverseMass = 0;
         } else {
@@ -105,13 +98,13 @@ class Ball {
     movement() {
         //checks what way to be accelerating acording to the keyboard
         this.acceleration = new Vec2(0, 0);
-        if (keyboard.w) {this.acceleration.y = -1}
-        if (keyboard.s) {this.acceleration.y =  1}
-        if (keyboard.d) {this.acceleration.x =  1}
-        if (keyboard.a) {this.acceleration.x = -1}
+        if (keyboard.w) this.acceleration.y = -1;
+        if (keyboard.s) this.acceleration.y =  1;
+        if (keyboard.d) this.acceleration.x =  1;
+        if (keyboard.a) this.acceleration.x = -1;
 
-        if (keyboard.w && keyboard.s) {this.acceleration.y = 0}
-        if (keyboard.d && keyboard.a) {this.acceleration.x = 0}
+        if (keyboard.w && keyboard.s) this.acceleration.y = 0;
+        if (keyboard.d && keyboard.a) this.acceleration.x = 0;
 
         //fixes the issue of the magnitude going over maxspeed in non cardinal directions by normalising the vectors
         this.acceleration = this.acceleration.normalise();
@@ -191,7 +184,7 @@ document.addEventListener("mousedown", (event) => {
         let direction = new Vec2(event.clientX, event.clientY)
         directionUnit = direction.sub(player.position).normalise()
         projectiles.push({
-            direction: new Vec2(directionUnit.mul(10).x, directionUnit.mul(10).y),
+            direction: new Vec2(directionUnit.mul(20).x, directionUnit.mul(20).y),
             position: player.position.add(new Vec2(directionUnit.mul(-1).y, directionUnit.mul(-1).x * -1).mul(player.radius -10)).add(directionUnit.mul(30))
         })
         onCooldown = true
@@ -216,157 +209,7 @@ let projectiles = []
 
 
 // our lines can be orginized in a 2d array where the y-cord is a list of all points in a closed loop
-function renderScene(pollygons, pov){
 
-    let directionsUnit = new Vec2(mouseX,mouseY);
-    directionsUnit = directionsUnit.sub(player.position).normalise().mul(player.radius)
-
-
-
-    let front = player.position.add(directionsUnit),
-    left = player.position.add(new Vec2(directionsUnit.y, directionsUnit.x * -1)),
-    right = player.position.add(new Vec2(directionsUnit.y, directionsUnit.x)),
-    back = player.position.add(directionsUnit.mul(-1)),
-    fr = front.add(right).normalise().mul(player.radius).add(player.position),
-    fl = front.add(left).normalise().mul(player.radius).add(player.position),
-    br = back.add(right).normalise().mul(player.radius).add(player.position),
-    bl = back.add(left).normalise().mul(player.radius).add(player.position);
-
-
-    if (pov === true){
-        let frontGradient = ctx.createRadialGradient(front.x, front.y, player.radius, front.x, front.y, player.lightRadius);
-        frontGradient.addColorStop(0, "hsla(1, 100%, 100%, 0.1)");
-        frontGradient.addColorStop(1, "hsla(0, 100%, 0%, 0)");
-        let leftGradient = ctx.createRadialGradient(left.x,left.y,player.radius,left.x,left.y,player.lightRadius);
-        leftGradient.addColorStop(0, "hsla(1, 100%, 100%, 0.1)");
-        leftGradient.addColorStop(1, "hsla(0, 100%, 0%, 0)");
-        let rightGradient = ctx.createRadialGradient(right.x,right.y,player.radius,right.x,right.y,player.lightRadius);
-        rightGradient.addColorStop(0, "hsla(1, 100%, 100%, 0.1)");
-        rightGradient.addColorStop(1, "hsla(0, 100%, 0%, 0)");
-        let backGradient = ctx.createRadialGradient(back.x,back.y,player.radius,back.x,back.y,player.lightRadius);
-        backGradient.addColorStop(0, "hsla(1, 100%, 100%, 0.1)");
-        backGradient.addColorStop(1, "hsla(0, 100%, 0%, 0)");
-        
-
-        ctx.fillStyle = frontGradient;
-        ctx.fillRect(0,0, canvas.width, canvas.height);
-        ctx.fillStyle = leftGradient;
-        ctx.fillRect(0,0, canvas.width, canvas.height);
-        ctx.fillStyle = rightGradient;
-        ctx.fillRect(0,0, canvas.width, canvas.height);
-        ctx.fillStyle = backGradient;
-        ctx.fillRect(0,0, canvas.width, canvas.height);
-
-        for (projectile in projectiles){
-            let lazerGradient = ctx.createRadialGradient(projectiles[projectile].position.x, 
-                projectiles[projectile].position.y, 0, 
-                projectiles[projectile].position.x, 
-                projectiles[projectile].position.y, 400);
-                lazerGradient.addColorStop(0, "hsla(1, 100%, 100%, 0.2)");
-                lazerGradient.addColorStop(1, "hsla(0, 100%, 0%, 0)");
-    
-                ctx.fillStyle = lazerGradient;
-                ctx.fillRect(0,0, canvas.width, canvas.height);
-            }
-
-        for (shape in pollygons){
-
-            shadow(pollygons[shape][0], pollygons[shape][pollygons[shape].length -1], front);
-            shadow(pollygons[shape][0], pollygons[shape][pollygons[shape].length -1], left);
-            shadow(pollygons[shape][0], pollygons[shape][pollygons[shape].length -1], right);
-            shadow(pollygons[shape][0], pollygons[shape][pollygons[shape].length -1], back);
-            shadow(pollygons[shape][0], pollygons[shape][pollygons[shape].length -1], fr);
-            shadow(pollygons[shape][0], pollygons[shape][pollygons[shape].length -1], fl);
-            shadow(pollygons[shape][0], pollygons[shape][pollygons[shape].length -1], br);
-            shadow(pollygons[shape][0], pollygons[shape][pollygons[shape].length -1], bl);
-
-            let shapeOutline = new Path2D();
-            shapeOutline.moveTo(pollygons[shape][0].x,pollygons[shape][0].y);
-
-            for (let i = 0; i < pollygons[shape].length-1; i++){
-
-                shapeOutline.lineTo(
-                    pollygons[shape][i+1].x,
-                    pollygons[shape][i+1].y
-                );
-
-                shadow(pollygons[shape][i], pollygons[shape][i+1], front);
-                shadow(pollygons[shape][i], pollygons[shape][i+1], left);
-                shadow(pollygons[shape][i], pollygons[shape][i+1], right)
-                shadow(pollygons[shape][i], pollygons[shape][i+1], back);
-                shadow(pollygons[shape][i], pollygons[shape][i+1], fr);
-                shadow(pollygons[shape][i], pollygons[shape][i+1], fl);
-                shadow(pollygons[shape][i], pollygons[shape][i+1], br)
-                shadow(pollygons[shape][i], pollygons[shape][i+1], bl);
-            };
-
-            shapeOutline.closePath();
-
-            ctx.fillStyle = "hsla(0, 0%, 7%, 1)";
-            ctx.fill(shapeOutline);
-
-        };
-    } else {
-        let frontGradient = ctx.createRadialGradient(front.x, front.y, player.radius, front.x, front.y, player.lightRadius + 200);
-        frontGradient.addColorStop(0, "hsla(1, 100%, 100%, 0.3)");
-        frontGradient.addColorStop(1, "hsla(0, 100%, 0%, 0)");
-
-        ctx.fillStyle = frontGradient;
-        let fovTriangel = new Path2D();
-        fovTriangel.moveTo(player.position.x, player.position.y)
-        fovTriangel.lineTo(
-            directionsUnit.mul(40).add(front).add(new Vec2(directionsUnit.y, directionsUnit.x * -1).mul(40)).x, 
-            directionsUnit.mul(40).add(player.position).add(new Vec2(directionsUnit.y, directionsUnit.x * -1).mul(60)).y
-        )
-        fovTriangel.lineTo(
-            directionsUnit.mul(40).add(front).add(new Vec2(directionsUnit.y * -1, directionsUnit.x).mul(40)).x, 
-            directionsUnit.mul(40).add(player.position).add(new Vec2(directionsUnit.y * -1, directionsUnit.x).mul(60)).y
-        )
-        fovTriangel.closePath()
-        ctx.fill(fovTriangel)
-
-        for (projectile in projectiles){
-        let lazerGradient = ctx.createRadialGradient(projectiles[projectile].position.x, 
-            projectiles[projectile].position.y, 0, 
-            projectiles[projectile].position.x, 
-            projectiles[projectile].position.y, 400);
-            lazerGradient.addColorStop(0, "hsla(1, 100%, 100%, 0.2)");
-            lazerGradient.addColorStop(1, "hsla(0, 100%, 0%, 0)");
-
-            ctx.fillStyle = lazerGradient;
-            ctx.fillRect(0,0, canvas.width, canvas.height);
-        }
-
-        for (shape in pollygons){
-            let shapeOutline = new Path2D();
-            shapeOutline.moveTo(pollygons[shape][0].x,pollygons[shape][0].y);
-
-            for (let i = 0; i < pollygons[shape].length-1; i++){
-                shapeOutline.lineTo(
-                    pollygons[shape][i+1].x,
-                    pollygons[shape][i+1].y
-                );
-            }
-            
-            shapeOutline.closePath();
-
-            ctx.fillStyle = "hsla(0, 0%, 10%, 1)";
-            ctx.fill(shapeOutline);
-        }
-        
-
-        for (shape in pollygons){
-            shadow(pollygons[shape][0], pollygons[shape][pollygons[shape].length -1], front);
-            for (let i = 0; i < pollygons[shape].length-1; i++){
-                shadow(pollygons[shape][i], pollygons[shape][i+1], front);
-            };
-        };
-
-        
-    }
-    // draw all seprate objects with all the light sources
-
-}
 
 window.keyboard = new RoboroKeyboard()
 
@@ -390,9 +233,9 @@ let frameCount = 0,
 let mouseX = 600;
     mouseY = 300;
 
+let HP = 100;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 
 function update(){
@@ -406,8 +249,6 @@ function update(){
         onCooldown = false;
         tick = 0;
     };
-    console.log(onCooldown, tick)
-
 
     frameCount++;
     timeCount += deltaTime;
@@ -418,13 +259,9 @@ function update(){
         frameCount = 0;
     };
 
-    
-
     ctx.fillStyle = "hsla(0, 0%, 7%, 1)";
     ctx.fillRect(0,0, canvas.width, canvas.height);
     
-    
-
     player.movement();
     player.updatePosition();
     friction(player);
@@ -432,25 +269,8 @@ function update(){
     
     renderScene(pollygons, false);
 
-    for (projectile in projectiles){
-        projectiles[projectile].position = projectiles[projectile].position.add(projectiles[projectile].direction)
-        ctx.beginPath();
-        ctx.moveTo(
-            projectiles[projectile].position.add(projectiles[projectile].direction.mul(-1)).x,
-            projectiles[projectile].position.add(projectiles[projectile].direction.mul(-1)).y
-        );
-        ctx.lineTo(
-            projectiles[projectile].position.add(projectiles[projectile].direction.mul(1)).x,
-            projectiles[projectile].position.add(projectiles[projectile].direction.mul(1)).y
-        );
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = "red";
-        ctx.stroke();
-        
-    };
-
-
     player.draw("hsla(1, 100%, 25%, 1)");
+
     // draws the gun
     let gun = new Path2D();
     let temp = new Vec2(mouseX, mouseY).sub(player.position).normalise().mul(-1);
@@ -473,6 +293,24 @@ function update(){
     gun.closePath();
     ctx.fillStyle ="gray";
     ctx.fill(gun);
+
+    let healthbarbackground = new Path2D();
+    healthbarbackground.moveTo(40, 50);
+    healthbarbackground.lineTo(40, 80);
+    healthbarbackground.lineTo(40 + 100*2, 80);
+    healthbarbackground.lineTo(40 + 100*2, 50);
+    healthbarbackground.closePath();
+    ctx.fillStyle = "red";
+    ctx.fill(healthbarbackground);
+
+    let healthbar = new Path2D();
+    healthbar.moveTo(40, 50);
+    healthbar.lineTo(40, 80);
+    healthbar.lineTo(40 + HP*2, 80);
+    healthbar.lineTo(40 + HP*2, 50);
+    healthbar.closePath();
+    ctx.fillStyle = "green";
+    ctx.fill(healthbar);
 
     if (show_fps) showFPS();
 };
