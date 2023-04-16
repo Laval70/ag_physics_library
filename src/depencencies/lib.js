@@ -131,11 +131,16 @@ function elasticCollision(object1, object2){
             object2.velocity = object2.velocity.add(impulseVector.mul(-object2.inverseMass));
         }
     } else if (object1 instanceof Ball && object2 instanceof Wall) {
+        let distanceVector = object1.position.sub(distanceToLineSegment(object2.pos1, object2.pos2, object1.position, true))
         let penetrationDepth = distanceToLineSegment(object2.pos1, object2.pos2, object1.position, false)
         if (penetrationDepth < object1.radius + object2.thickness) {
-            let distanceVector = object1.position.sub(distanceToLineSegment(object2.pos1, object2.pos2, object1.position, true))
             let penetrationRes = distanceVector.normalise().mul(object1.radius + object2.thickness - penetrationDepth)
             object1.position = object1.position.add(penetrationRes);
+            //as of now this does not work with moving walls
+            let seperatingVelocity = object1.velocity.dot(distanceVector.normalise());
+            let new_seperatingVelocity = -seperatingVelocity;
+            let seperatingVelocityDiffrence = seperatingVelocity - new_seperatingVelocity;
+            object1.velocity =  object1.velocity.add(distanceVector.normalise().mul(-seperatingVelocityDiffrence));
         }
     }
 }

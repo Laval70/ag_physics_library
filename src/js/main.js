@@ -163,9 +163,9 @@ class Square {
 }
 // Will Need updating to Canvas2D
 class Wall {
-    constructor(x1, y1, x2, y2, mass, thickness) {
-        this.pos1 = new Vec2(x1, y1)
-        this.pos2 = new Vec2(x2, y2)
+    constructor(pos1, pos2, mass, thickness) {
+        this.pos1 = pos1
+        this.pos2 = pos2
         this.thickness = thickness
         this.mass = mass;
         if (this.mass = 0) {
@@ -174,7 +174,7 @@ class Wall {
     }
 
     draw() {
-        line(ctx, this.pos1, this.pos2, this.thickness, "black")
+        line(ctx, this.pos1, this.pos2, this.thickness, "blue")
     }
 }
 
@@ -212,6 +212,18 @@ let pollygons = [
     [new Vec2(400,700), new Vec2(400,900), new Vec2(700,900), new Vec2(700,800)], // quad 3
     [new Vec2(900,700), new Vec2(1100,700), new Vec2(1100,900), new Vec2(900,900)], // quad 4
 ];
+
+let lines = [];
+
+pollygons.forEach(pollygon => {
+    let length = pollygon.length - 1
+    lines.push(new Wall(pollygon[0], pollygon[length], 0, 1))
+    for (let i = length; i > 0; i--) {
+        lines.push(new Wall(pollygon[i], pollygon[i - 1], 0, 1))
+    }
+});
+
+
 
 let projectiles = []
 
@@ -276,6 +288,10 @@ function update(){
     player.movement();
     player.updatePosition();
     friction(player);
+
+    lines.forEach(line => {
+        elasticCollision(player, line)
+    });
     
     
     renderScene(pollygons, false);
