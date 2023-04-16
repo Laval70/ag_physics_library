@@ -81,13 +81,21 @@ function tringle(A, B, C, color){
     ctx.fillStyle = color;
     ctx.fill(tringle)
 }
-function circle(ctx, x, y, radius, color) {
+function circle(ctx, vec, radius, color) {
     let circle = new Path2D();
-    circle.arc(x, y, radius, 0, Math.PI*2, true);
+    circle.arc(vec.x, vec.y, radius, 0, Math.PI*2, true);
     circle.closePath();
 
     ctx.fillStyle = color;
     ctx.fill(circle);
+}
+function line(ctx, vec1, vec2, thickness, color) {
+    ctx.beginPath();
+    ctx.moveTo(vec1.x, vec1.y);
+    ctx.lineTo(vec2.x, vec2.y);
+    ctx.lineWidth = thickness;
+    ctx.strokeStyle = color;
+    ctx.stroke();
 }
 
 function shadow(A, B, Q){
@@ -306,7 +314,7 @@ function renderScene(pollygons, pov){
 
         };
     } else {
-        let frontGradient = ctx.createRadialGradient(front.x, front.y, player.radius, front.x, front.y, player.lightRadius + 200);
+        let frontGradient = ctx.createRadialGradient(player.position.x, player.position.y, player.radius, player.position.x, player.position.y, player.lightRadius + 200);
         frontGradient.addColorStop(0, "hsla(1, 100%, 100%, 0.3)");
         frontGradient.addColorStop(1, "hsla(0, 100%, 0%, 0)");
 
@@ -314,18 +322,18 @@ function renderScene(pollygons, pov){
         let fovTriangel = new Path2D();
         fovTriangel.moveTo(player.position.x, player.position.y)
         fovTriangel.lineTo(
-            directionsUnit.mul(40).add(front).add(new Vec2(directionsUnit.y, directionsUnit.x * -1).mul(40)).x, 
+            directionsUnit.mul(40).add(player.position).add(new Vec2(directionsUnit.y, directionsUnit.x * -1).mul(40)).x, 
             directionsUnit.mul(40).add(player.position).add(new Vec2(directionsUnit.y, directionsUnit.x * -1).mul(60)).y
         )
         fovTriangel.lineTo(
-            directionsUnit.mul(40).add(front).add(new Vec2(directionsUnit.y * -1, directionsUnit.x).mul(40)).x, 
+            directionsUnit.mul(40).add(player.position).add(new Vec2(directionsUnit.y * -1, directionsUnit.x).mul(40)).x, 
             directionsUnit.mul(40).add(player.position).add(new Vec2(directionsUnit.y * -1, directionsUnit.x).mul(60)).y
         )
         fovTriangel.closePath()
         ctx.fill(fovTriangel)
 
         for (projectile in projectiles){
-        let lazerGradient = ctx.createRadialGradient(projectiles[projectile].position.x, 
+            let lazerGradient = ctx.createRadialGradient(projectiles[projectile].position.x, 
             projectiles[projectile].position.y, 0, 
             projectiles[projectile].position.x, 
             projectiles[projectile].position.y, 400);
@@ -371,11 +379,29 @@ function renderScene(pollygons, pov){
         
 
         for (shape in pollygons){
-            shadow(pollygons[shape][0], pollygons[shape][pollygons[shape].length -1], front);
+            shadow(pollygons[shape][0], pollygons[shape][pollygons[shape].length -1], player.position);
             for (let i = 0; i < pollygons[shape].length-1; i++){
-                shadow(pollygons[shape][i], pollygons[shape][i+1], front);
+                shadow(pollygons[shape][i], pollygons[shape][i+1], player.position);
             };
         };
     };
     // draw all seprate objects with all the light sources
 };
+
+function togglePause(){
+    isRunning = !isRunning;
+
+    if (isRunning) update()
+}
+function togglePauseMenu(){
+    let menu = document.getElementById("pauseMenu")
+    if (menu.style.display == "none")menu.style.display = "flex"
+    else if (menu.style.display == "flex")menu.style.display = "none"
+
+}
+function showFPS(){
+    ctx.fillStyle = "White";
+    ctx.font      = "normal 16pt Arial";
+
+    ctx.fillText(Math.round(fps) + " fps", 10, 26);
+}

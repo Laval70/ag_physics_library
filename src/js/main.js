@@ -84,14 +84,14 @@ class Ball {
     }
     // Will Need updating to Canvas2D
     draw(color) {
-        circle(ctx ,this.position.x, this.position.y, this.radius, color);
+        circle(ctx ,this.position, this.radius, color);
     }
     
 
     //update actual position acording to velocity
     updatePosition() {
-        this.position.x += this.velocity.x
-        this.position.y += this.velocity.y
+        this.position.x += this.velocity.x;
+        this.position.y += this.velocity.y;
     }
 
     //system for applying a force on the ball
@@ -174,7 +174,7 @@ class Wall {
     }
 
     draw() {
-        line(this.pos1.x, this.pos1.y, this.pos2.x, this.pos2.y, this.thickness, "black")
+        line(ctx, this.pos1, this.pos2, this.thickness, "black")
     }
 }
 
@@ -194,6 +194,14 @@ document.addEventListener("mousemove", (event) => {
     mouseX = event.clientX;
     mouseY = event.clientY;
 })
+document.addEventListener("keydown", (event) => {
+    timeLastFrame = performance.now();
+    if (event.key === "Escape") {
+        togglePause();
+        togglePauseMenu();
+    }
+})
+
 
 const player = new Ball(500, 300, 30, 10, 800)
 
@@ -218,28 +226,25 @@ let deltaTime;
 
 let fps          = 0,
     show_fps     = true;
-    
-function showFPS(){
-    ctx.fillStyle = "White";
-    ctx.font      = "normal 16pt Arial";
 
-    ctx.fillText(Math.round(fps) + " fps", 10, 26);
-}
 let frameCount = 0,
     timeCount  = 0,
     tick = 0,
-    onCooldown;
+    onCooldown,
+    isRunning = true;
 
 let mouseX = 600;
     mouseY = 300;
 
 let HP = 100;
 
+document.getElementById("pauseMenu").style.display = "none";
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 function update(){
-    requestAnimationFrame(update);
+    if (isRunning) requestAnimationFrame(update);
 
     deltaTime = (performance.now() - timeLastFrame)/1000;
     timeLastFrame = performance.now();
@@ -250,15 +255,21 @@ function update(){
         tick = 0;
     };
 
+    if (!document.hasFocus() && isRunning) {
+        togglePause()
+        togglePauseMenu()
+    }
+
+
     frameCount++;
     timeCount += deltaTime;
-
+    
     if (timeCount >= 0.1){
         fps = frameCount / timeCount;
         timeCount = 0;
         frameCount = 0;
     };
-
+    
     ctx.fillStyle = "hsla(0, 0%, 7%, 1)";
     ctx.fillRect(0,0, canvas.width, canvas.height);
     
@@ -315,5 +326,3 @@ function update(){
     if (show_fps) showFPS();
 };
 update();
-
-

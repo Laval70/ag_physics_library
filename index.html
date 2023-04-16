@@ -3,6 +3,7 @@
 <head>
     <script src="./src/depencencies/lib.js" defer></script>
     <script src="./src/js/main.js" defer></script>
+    <link rel="stylesheet" href="./src/css/main.css">
     <style>
         * {
             padding: 0;
@@ -13,6 +14,11 @@
 
 <body>
     <canvas id="canvas"></canvas>
+    <nav id="pauseMenu">
+        <button onclick="timeLastFrame = performance.now();togglePause(); togglePauseMenu();;">Continue</button>
+        <button>Options</button>
+        <button>Exit to Menu</button>
+    </nav>
 </body>
 
 </html>
