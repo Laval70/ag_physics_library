@@ -144,6 +144,16 @@ function elasticCollision(object1, object2){
         }
     }
 }
+
+function rotateMatrix(radians) {
+    let matrix = new matrices(2, 2)
+    matrix.data[0][0] = math.cos(radians)
+    matrix.data[0][1] = -math.sin(radians)
+    matrix.data[1][0] = math.sin(radians)
+    matrix.data[1][1] = math.cos(radians)
+    return matrix
+}
+
 // imported from advanced.js
 function RoboroKeyboard()
 {

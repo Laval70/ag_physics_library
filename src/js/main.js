@@ -63,6 +63,30 @@ class Vec2 {
 		return new Vec2(this.x + v.x * deltaTime, this.y + v.y * deltaTime);
 	}
 }
+
+class matrices {
+    constructor(rows, collums) {
+        this.rows = rows;
+        this.collums = collums;
+        this.data = [];
+
+        for (let i = 0; i < this.rows; i++) {
+            this.data[i] = [];
+            for (let j = j; j < this.collums; j++) {
+                this.data[i][j] = 0;
+            }
+        }
+    }
+
+    mulVec(v) {
+        let result = new Vec2(0,0);
+        result.x = this.data[0][0] * v.x + this.data[0][1] * v.y;
+        result.y = this.data[1][0] * v.x + this.data[1][1] * v.y;
+        return result;
+    }
+        
+}
+
 // Will Need updating to Canvas2D
 class Ball {
     constructor(x, y, radius, mass, lightRadius) {
@@ -113,53 +137,25 @@ class Ball {
     }
 }
 // Will Need updating to Canvas2D
-class Square {
-    constructor(x, y, hight, width, angle) {
-        this.position = new Vec2(x, y);
-        this.angle = angle;
-        this.radians = this.angle * Math.PI / 180;
-        this.velocity = new Vec2(0, 0)
-        this.width = width;
-		this.hight = hight;
-        this.acceleration = new Vec2(0, 0);
-		this.accelerationConstant = 20;
+class pollygon {
+    constructor(points, angle) {
+        this.points = points
+        this.lines = []
+        this.angle = angle
 
-        //uses trig rotation och the hight and width to calculate the 4 corners 
-        this.tempP1 = new Vec2(-width/2, hight/2)
-        this.tempP2 = new Vec2(width/2, hight/2)
-        this.tempP3 = new Vec2(-width/2, -hight/2)
-        this.tempP4 = new Vec2(width/2, -hight/2)
-
-        this.p1 = this.position.add(new Vec2(this.tempP1.x * Math.cos(this.radians) - this.tempP1.y * Math.sin(this.radians), this.tempP1.x * Math.sin(this.radians) + this.tempP1.y * Math.cos(this.radians)))
-        this.p2 = this.position.add(new Vec2(this.tempP2.x * Math.cos(this.radians) - this.tempP2.y * Math.sin(this.radians), this.tempP2.x * Math.sin(this.radians) + this.tempP2.y * Math.cos(this.radians)))
-        this.p3 = this.position.add(new Vec2(this.tempP3.x * Math.cos(this.radians) - this.tempP3.y * Math.sin(this.radians), this.tempP3.x * Math.sin(this.radians) + this.tempP3.y * Math.cos(this.radians)))
-        this.p4 = this.position.add(new Vec2(this.tempP4.x * Math.cos(this.radians) - this.tempP4.y * Math.sin(this.radians), this.tempP4.x * Math.sin(this.radians) + this.tempP4.y * Math.cos(this.radians)))
-    }
-
-    draw() {
-        line(this.p1.x, this.p1.y, this.p2.x, this.p2.y, 1, "black")
-        line(this.p2.x, this.p2.y, this.p4.x, this.p4.y, 1, "black")
-        line(this.p4.x, this.p4.y, this.p3.x, this.p3.y, 1, "black")
-        line(this.p3.x, this.p3.y, this.p1.x, this.p1.y, 1, "black")
-    }
-
-    rotation() {
-        //ensures angle stays within 360 degrees
-        if (this.angle < 0) {
-            this.angle += 360
-        } else if (this.angle > 360){
-            this.angle -= 360 
+        let length = this.points.length - 1
+        this.lines.push(new Wall(this.points[0], this.points[length], 0, 1))
+        for (let i = length; i > 0; i--) {
+        lines.push(new Wall(this.points[i], this.points[i - 1], 0, 1))
         }
-
-        this.radians = this.angle * Math.PI / 180;
-
-        //updates rotation
-        this.p1 = this.position.add(new Vec2(this.tempP1.x * Math.cos(this.radians) - this.tempP1.y * Math.sin(this.radians), this.tempP1.x * Math.sin(this.radians) + this.tempP1.y * Math.cos(this.radians)))
-        this.p2 = this.position.add(new Vec2(this.tempP2.x * Math.cos(this.radians) - this.tempP2.y * Math.sin(this.radians), this.tempP2.x * Math.sin(this.radians) + this.tempP2.y * Math.cos(this.radians)))
-        this.p3 = this.position.add(new Vec2(this.tempP3.x * Math.cos(this.radians) - this.tempP3.y * Math.sin(this.radians), this.tempP3.x * Math.sin(this.radians) + this.tempP3.y * Math.cos(this.radians)))
-        this.p4 = this.position.add(new Vec2(this.tempP4.x * Math.cos(this.radians) - this.tempP4.y * Math.sin(this.radians), this.tempP4.x * Math.sin(this.radians) + this.tempP4.y * Math.cos(this.radians)))
-        
     }
+
+    collision(ball) {
+        this.lines.forEach(line => {
+            elasticCollision(ball, line)
+        });
+    }
+
 }
 // Will Need updating to Canvas2D
 class Wall {
@@ -171,6 +167,10 @@ class Wall {
         if (this.mass = 0) {
             this.inverseMass = 0;
         } else {this.inverseMass = 1/this.mass;}
+        this.oriPos1 = this.pos1
+        this.oriPos2 = this.pos2
+        this.center = this.pos1.add(this.pos2).mul(0.5);
+
     }
 
     draw() {
