@@ -4,8 +4,9 @@ const ctx = canvas.getContext("2d")
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-let lines = [];
-let balls = [];
+let Walls = [];
+let Balls = [];
+let Lines = [];
 let projectiles = []
 
 
@@ -62,6 +63,10 @@ class Vec2 {
 		return this.x * v.x + this.y * v.y;
 	}
 
+    cross(v) {
+        return this.x * v.y + this.y * v.x;
+    }
+
     //adds to vectors but takes deltaTime into account
     deltaTimeAdd(v) {
 		return new Vec2(this.x + v.x * deltaTime, this.y + v.y * deltaTime);
@@ -109,6 +114,8 @@ class Ball {
         } else {
             this.inverseMass = 1/this.mass;
         }
+
+        Balls.push(this)
     }
     // Will Need updating to Canvas2D
     draw(color) {
@@ -141,32 +148,50 @@ class Ball {
     }
 }
 
-
-// class pollygon {
-//     constructor(points, center, angle) {
-//         this.points = points
-//         this.lines = []
-//         this.angle = angle
-//         this.center = center
-
-//         let length = this.points.length - 1
-//         this.lines.push(new Wall(this.points[0], this.points[length], 0, 1))
-//         for (let i = length; i > 0; i--) {
-//         lines.push(new Wall(this.points[i], this.points[i - 1], 0, 1))
-//         }
-//     }
-
-//     collision(ball) {
-//         this.lines.forEach(line => {
-//             elasticCollision(ball, line)
-//         });
-//     }
-
-// }
-
 class Square {
     constructor() {
 
+    }
+}
+
+//basically a wall that can move, inspierd by unity
+class Line {
+    constructor(pos1, pos2, thickness, mass) {
+        this.pos1 = pos1;
+        this.pos2 = pos2;
+        this.thickness = thickness;
+        this.length = this.pos2.sub(this.pos1).magnitude();
+        this.normal = this.pos2.sub(this.pos1).normalise();
+        this.angle = 0
+        this.oriNormal = this.pos2.sub(this.pos1).normalise();
+        this.absoPos = this.pos1.add(this.pos2).mul(0.5);
+        this.velocity = new Vec2(0, 0);
+        this.rotVelocity = 0
+
+        this.mass = mass;
+        if (this.mass === 0) {
+            this.inverseMass = 0;
+        } else {
+            this.inverseMass = 1/this.mass;
+        }
+
+        Lines.push(this)
+    }
+
+    draw() {
+        line(ctx, this.pos1, this.pos2, this.thickness * 2, "blue")
+        circle(ctx ,this.pos1, this.thickness, "blue");
+        circle(ctx ,this.pos2, this.thickness, "blue");
+    }
+
+    update() {
+        this.angle += this.rotVelocity;
+        this.rotVelocity *= 0.5;
+        let rotationMatrix = rotateMatrix(this.angle);
+        let newDirection = rotationMatrix.mulVec(this.oriNormal);
+        this.absoPos = this.absoPos.add(this.velocity)
+        this.pos1 = this.absoPos.add(newDirection.mul(-this.length/2));
+        this.pos2 = this.absoPos.add(newDirection.mul(this.length/2));
     }
 }
 
@@ -187,6 +212,7 @@ class Wall {
         this.center = this.pos1.add(this.pos2).mul(0.5);
         this.angle = 0;
         this.rotVelocity = 0
+        Walls.push(this)
 
     }
 
@@ -243,9 +269,9 @@ let pollygons = [
 
 pollygons.forEach(pollygon => {
     let length = pollygon.length - 1
-    lines.push(new Wall(pollygon[0], pollygon[length], 0, 1))
+    new Wall(pollygon[0], pollygon[length], 0, 1)
     for (let i = length; i > 0; i--) {
-        lines.push(new Wall(pollygon[i], pollygon[i - 1], 0, 1))
+        new Wall(pollygon[i], pollygon[i - 1], 0, 1)
     }
 });
 
@@ -278,6 +304,9 @@ let HP = 100;
 
 document.getElementById("pauseMenu").style.display = "none";
 
+let line1 = new Line(new Vec2(500, 300), new Vec2(550, 300), 10, 1)
+let line2 = new Line(new Vec2(500, 400), new Vec2(550, 400), 10, 1)
+line2.velocity.y = -8
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -315,9 +344,8 @@ function update(){
     player.updatePosition();
     friction(player);
 
-    lines.forEach(line => {
-        elasticCollision(player, line)
-        line.update()
+    Walls.forEach(wall => {
+        Collision(player, wall)
     });
     
     
@@ -367,5 +395,17 @@ function update(){
     ctx.fill(healthbar);
 
     if (show_fps) showFPS();
+
+    line1.draw()
+    line1.update()
+    line1.rotVelocity = 0.01;
+    friction(line1)
+
+    line2.draw()
+    line2.update()
+    line2.rotVelocity = 0;
+    friction(line2)
+
+    Collision(line1, line2)
 };
 update();

@@ -47,6 +47,25 @@ function distanceToLineSegment(p1, p2, q, returnPoint) {
     }
 }
 
+function closestPointsOnLineSegments(l1, l2) {
+    let shortestDistance = distanceToLineSegment(l2.pos1, l2.pos2, l1.pos1, true).sub(l1.pos1).magnitude();
+    let closestPoints = [l1.pos1, distanceToLineSegment(l2.pos1, l2.pos2,l1.pos1, true)];
+    if (distanceToLineSegment(l2.pos1, l2.pos2, l1.pos2, true).sub(l1.pos2).magnitude() < shortestDistance) {
+        shortestDistance = distanceToLineSegment(l2.pos1, l2.pos2, l1.pos2, true).sub(l1.pos2).magnitude()
+        closestPoints = [l1.pos2, distanceToLineSegment(l2.pos1, l2.pos2, l1.pos2, true)]
+    }
+    if (distanceToLineSegment(l1.pos1, l1.pos2, l2.pos1, true).sub(l2.pos1).magnitude() < shortestDistance) {
+        shortestDistance = distanceToLineSegment(l1.pos1, l1.pos2, l2.pos1, true).sub(l2.pos1).magnitude()
+        closestPoints = [distanceToLineSegment(l1.pos1, l1.pos2, l2.pos1, true), l2.pos1]
+    }
+    if (distanceToLineSegment(l1.pos1, l1.pos2, l2.pos2, true).sub(l2.pos2).magnitude() < shortestDistance) {
+        shortestDistance = distanceToLineSegment(l1.pos1, l1.pos2, l2.pos2, true).sub(l2.pos2).magnitude()
+        closestPoints = [distanceToLineSegment(l1.pos1, l1.pos2, l2.pos2, true), l2.pos2]
+    }
+    line(ctx, closestPoints[0], closestPoints[1], 1, "red")
+    return closestPoints;
+}
+
 // Will need updating to new way of organising vertices and lines
 function findClosestLine(lineList, q) {
 	let closestDistance = Infinity;
@@ -106,7 +125,7 @@ function shadow(A, B, Q){
 };
 
 //simulates elastic collision
-function elasticCollision(object1, object2){
+function Collision(object1, object2){
     //checks if the collision is between two balls
     if (object1 instanceof Ball && object2 instanceof Ball) {
         let distanceVector = object1.position.sub(object2.position);
@@ -133,14 +152,39 @@ function elasticCollision(object1, object2){
     } else if (object1 instanceof Ball && object2 instanceof Wall) {
         let distanceVector = object1.position.sub(distanceToLineSegment(object2.pos1, object2.pos2, object1.position, true))
         let penetrationDepth = distanceToLineSegment(object2.pos1, object2.pos2, object1.position, false)
-        if (penetrationDepth < object1.radius + object2.thickness) {
-            let penetrationRes = distanceVector.normalise().mul(object1.radius + object2.thickness - penetrationDepth)
+        if (penetrationDepth < object1.radius + (object2.thickness/2)) {
+            //provents clipping by moving the ball out of the wall
+            let penetrationRes = distanceVector.normalise().mul(object1.radius + (object2.thickness/2) - penetrationDepth)
             object1.position = object1.position.add(penetrationRes);
-            //as of now this does not work with moving walls
+
+            //reverses velocity of the ball along the collision normal
             let seperatingVelocity = object1.velocity.dot(distanceVector.normalise());
             let new_seperatingVelocity = -seperatingVelocity;
             let seperatingVelocityDiffrence = seperatingVelocity - new_seperatingVelocity;
             object1.velocity =  object1.velocity.add(distanceVector.normalise().mul(-seperatingVelocityDiffrence));
+        }
+    } else if (object1 instanceof Line && object2 instanceof Line) {
+        let closestPoints = closestPointsOnLineSegments(object1, object2);
+        let distanceVector = closestPoints[0].sub(closestPoints[1]);
+        if (object1.thickness + object2.thickness >= distanceVector.magnitude()) {
+            //provents clipping by moving the lines out of eachother
+            let penetrationDepth = object1.thickness + object2.thickness - distanceVector.magnitude();
+            let penetrationRes = distanceVector.normalise().mul(penetrationDepth / (object1.inverseMass + object2.inverseMass))
+            object1.absoPos = object1.absoPos.add(penetrationRes.mul(object1.inverseMass))
+            object2.absoPos = object2.absoPos.add(penetrationRes.mul(-object2.inverseMass))
+
+            //gets the dot product of the lines velocity along the normal of the collision and swaps them between the balls 
+            let relativeVelocity = object1.velocity.sub(object2.velocity);
+            let seperatingVelocity = relativeVelocity.dot(distanceVector.normalise());
+            let new_seperatingVelocity = -seperatingVelocity;
+
+            //taking mass into the ecvation
+            let seperatingVelocityDiffrence = new_seperatingVelocity - seperatingVelocity;
+            let impulse = seperatingVelocityDiffrence/(object1.inverseMass + object2.inverseMass);
+            let impulseVector = distanceVector.normalise().mul(impulse);
+
+            object1.velocity = object1.velocity.add(impulseVector.mul(object1.inverseMass));
+            object2.velocity = object2.velocity.add(impulseVector.mul(-object2.inverseMass));
         }
     }
 }
