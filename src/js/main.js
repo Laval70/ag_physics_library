@@ -175,6 +175,13 @@ class Line {
             this.inverseMass = 1/this.mass;
         }
 
+        this.inertia = this.mass * (this.thickness**2 + (this.length + 2 * this.thickness)**2) / 12
+        if (this.mass === 0) {
+            this.inverseInertia = 0;
+        } else {
+            this.inverseInertia = 1 / this.inertia
+        }
+
         Lines.push(this)
     }
 
@@ -307,6 +314,7 @@ document.getElementById("pauseMenu").style.display = "none";
 let line1 = new Line(new Vec2(500, 300), new Vec2(550, 300), 10, 1)
 let line2 = new Line(new Vec2(500, 400), new Vec2(550, 400), 10, 1)
 line2.velocity.y = -8
+line2.rotVelocity = -0.2;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -398,12 +406,10 @@ function update(){
 
     line1.draw()
     line1.update()
-    line1.rotVelocity = 0.01;
     friction(line1)
 
     line2.draw()
     line2.update()
-    line2.rotVelocity = 0;
     friction(line2)
 
     Collision(line1, line2)

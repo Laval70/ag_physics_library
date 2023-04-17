@@ -173,6 +173,20 @@ function Collision(object1, object2){
             object1.absoPos = object1.absoPos.add(penetrationRes.mul(object1.inverseMass))
             object2.absoPos = object2.absoPos.add(penetrationRes.mul(-object2.inverseMass))
 
+            //calculating closing velocity
+            let collisionArm1 = closestPoints[0].sub(object1.absoPos).add(distanceVector.normalise().mul(object1.thickness));
+            let rotationalVelocity1 = new Vec2(-object1.rotVelocity * collisionArm1.y, object1.rotVelocity * collisionArm1.x);
+            let closingVelocity1 = object1.velocity.add(rotationalVelocity1);
+            let collisionArm2 = closestPoints[1].sub(object2.absoPos).add(distanceVector.normalise().mul(-object2.thickness));
+            let rotationalVelocity2 = new Vec2(-object2.rotVelocity * collisionArm2.y, object2.rotVelocity * collisionArm2.x);
+            let closingVelocity2 = object2.velocity.add(rotationalVelocity2);
+
+            //relative velocity of closing velocitys
+            let impulseAugmentation1 = collisionArm1.cross(distanceVector.normalise())
+            impulseAugmentation1 = impulseAugmentation1 * object1.inverseInertia * impulseAugmentation1
+            let impulseAugmentation2 = collisionArm2.cross(distanceVector.normalise())
+            impulseAugmentation2 = impulseAugmentation2 * object2.inverseInertia * impulseAugmentation2
+
             //gets the dot product of the lines velocity along the normal of the collision and swaps them between the balls 
             let relativeVelocity = object1.velocity.sub(object2.velocity);
             let seperatingVelocity = relativeVelocity.dot(distanceVector.normalise());
@@ -180,11 +194,15 @@ function Collision(object1, object2){
 
             //taking mass into the ecvation
             let seperatingVelocityDiffrence = new_seperatingVelocity - seperatingVelocity;
-            let impulse = seperatingVelocityDiffrence/(object1.inverseMass + object2.inverseMass);
+            let impulse = seperatingVelocityDiffrence/(object1.inverseMass + object2.inverseMass + impulseAugmentation1 + impulseAugmentation2);
             let impulseVector = distanceVector.normalise().mul(impulse);
 
+            //calculating linier and rotational velocitys
             object1.velocity = object1.velocity.add(impulseVector.mul(object1.inverseMass));
             object2.velocity = object2.velocity.add(impulseVector.mul(-object2.inverseMass));
+
+            object1.rotVelocity += object1.inverseInertia * collisionArm1.cross(impulseVector);
+            object2.rotVelocity -= object2.inverseInertia * collisionArm2.cross(impulseVector);
         }
     }
 }
