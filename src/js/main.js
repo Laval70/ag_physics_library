@@ -4,6 +4,10 @@ const ctx = canvas.getContext("2d")
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+let lines = [];
+let balls = [];
+let projectiles = []
+
 
 //a class representing vectors and adds functions for vector operations
 // Will Need updating to Canvas2D
@@ -72,7 +76,7 @@ class matrices {
 
         for (let i = 0; i < this.rows; i++) {
             this.data[i] = [];
-            for (let j = j; j < this.collums; j++) {
+            for (let j = 0; j < this.collums; j++) {
                 this.data[i][j] = 0;
             }
         }
@@ -136,27 +140,36 @@ class Ball {
         this.velocity = this.velocity.add(this.acceleration);
     }
 }
-// Will Need updating to Canvas2D
-class pollygon {
-    constructor(points, angle) {
-        this.points = points
-        this.lines = []
-        this.angle = angle
 
-        let length = this.points.length - 1
-        this.lines.push(new Wall(this.points[0], this.points[length], 0, 1))
-        for (let i = length; i > 0; i--) {
-        lines.push(new Wall(this.points[i], this.points[i - 1], 0, 1))
-        }
+
+// class pollygon {
+//     constructor(points, center, angle) {
+//         this.points = points
+//         this.lines = []
+//         this.angle = angle
+//         this.center = center
+
+//         let length = this.points.length - 1
+//         this.lines.push(new Wall(this.points[0], this.points[length], 0, 1))
+//         for (let i = length; i > 0; i--) {
+//         lines.push(new Wall(this.points[i], this.points[i - 1], 0, 1))
+//         }
+//     }
+
+//     collision(ball) {
+//         this.lines.forEach(line => {
+//             elasticCollision(ball, line)
+//         });
+//     }
+
+// }
+
+class Square {
+    constructor() {
+
     }
-
-    collision(ball) {
-        this.lines.forEach(line => {
-            elasticCollision(ball, line)
-        });
-    }
-
 }
+
 // Will Need updating to Canvas2D
 class Wall {
     constructor(pos1, pos2, mass, thickness) {
@@ -167,10 +180,23 @@ class Wall {
         if (this.mass = 0) {
             this.inverseMass = 0;
         } else {this.inverseMass = 1/this.mass;}
-        this.oriPos1 = this.pos1
-        this.oriPos2 = this.pos2
+        this.length = this.pos2.sub(this.pos1).magnitude()
+        this.oriPos1 = this.pos1;
+        this.oriPos2 = this.pos2;
+        this.oriNormal = this.pos2.sub(this.pos1).normalise();
         this.center = this.pos1.add(this.pos2).mul(0.5);
+        this.angle = 0;
+        this.rotVelocity = 0
 
+    }
+
+    update() {
+        this.angle += this.rotVelocity;
+        this.rotVelocity *= 0.5;
+        let rotationMatrix = rotateMatrix(this.angle);
+        let newDirection = rotationMatrix.mulVec(this.oriNormal);
+        this.pos1 = this.center.add(newDirection.mul(-this.length/2));
+        this.pos2 = this.center.add(newDirection.mul(this.length/2));
     }
 
     draw() {
@@ -213,7 +239,7 @@ let pollygons = [
     [new Vec2(900,700), new Vec2(1100,700), new Vec2(1100,900), new Vec2(900,900)], // quad 4
 ];
 
-let lines = [];
+
 
 pollygons.forEach(pollygon => {
     let length = pollygon.length - 1
@@ -225,7 +251,7 @@ pollygons.forEach(pollygon => {
 
 
 
-let projectiles = []
+
 
 
 // our lines can be orginized in a 2d array where the y-cord is a list of all points in a closed loop
@@ -291,6 +317,7 @@ function update(){
 
     lines.forEach(line => {
         elasticCollision(player, line)
+        line.update()
     });
     
     

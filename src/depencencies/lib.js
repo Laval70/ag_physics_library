@@ -145,12 +145,13 @@ function elasticCollision(object1, object2){
     }
 }
 
+//creates a rotational matrix to ratate points in a euclidian space, aka trig rotation
 function rotateMatrix(radians) {
     let matrix = new matrices(2, 2)
-    matrix.data[0][0] = math.cos(radians)
-    matrix.data[0][1] = -math.sin(radians)
-    matrix.data[1][0] = math.sin(radians)
-    matrix.data[1][1] = math.cos(radians)
+    matrix.data[0][0] = Math.cos(radians)
+    matrix.data[0][1] = -Math.sin(radians)
+    matrix.data[1][0] = Math.sin(radians)
+    matrix.data[1][1] = Math.cos(radians)
     return matrix
 }
 
