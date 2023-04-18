@@ -108,11 +108,20 @@ class Ball {
         this.acceleration = new Vec2(0, 0);
         this.accelerationConstant = 0.1;
 
+        this.angle = 0
+        this.rotVelocity = 0
+
         this.mass = mass;
         if (this.mass === 0) {
             this.inverseMass = 0;
         } else {
             this.inverseMass = 1/this.mass;
+        }
+        this.inertia = ((this.mass * this.radius)**2)/12
+        if (this.mass === 0) {
+            this.inverseInertia = 0;
+        } else {
+            this.inverseInertia = 1 / this.inertia
         }
 
         Balls.push(this)
@@ -175,7 +184,7 @@ class Line {
             this.inverseMass = 1/this.mass;
         }
 
-        this.inertia = this.mass * (this.thickness**2 + (this.length + 2 * this.thickness)**2) / 12
+        this.inertia = this.mass * (this.thickness**2 + (this.length + 2 * this.thickness)**2) /4
         if (this.mass === 0) {
             this.inverseInertia = 0;
         } else {
@@ -193,7 +202,7 @@ class Line {
 
     update() {
         this.angle += this.rotVelocity;
-        this.rotVelocity *= 0.5;
+        this.rotVelocity *= 0.98;
         let rotationMatrix = rotateMatrix(this.angle);
         let newDirection = rotationMatrix.mulVec(this.oriNormal);
         this.absoPos = this.absoPos.add(this.velocity)
@@ -311,10 +320,7 @@ let HP = 100;
 
 document.getElementById("pauseMenu").style.display = "none";
 
-let line1 = new Line(new Vec2(500, 300), new Vec2(550, 300), 10, 1)
-let line2 = new Line(new Vec2(500, 400), new Vec2(550, 400), 10, 1)
-line2.velocity.y = -8
-line2.rotVelocity = -0.2;
+let line1 = new Line(new Vec2(500, 400), new Vec2(600, 400), 10, 1)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -408,10 +414,6 @@ function update(){
     line1.update()
     friction(line1)
 
-    line2.draw()
-    line2.update()
-    friction(line2)
-
-    Collision(line1, line2)
+    Collision(player, line1)
 };
 update();
