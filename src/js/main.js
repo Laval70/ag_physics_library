@@ -117,7 +117,7 @@ class Ball {
         } else {
             this.inverseMass = 1/this.mass;
         }
-        this.inertia = ((this.mass * this.radius)**2)/12
+        this.inertia = ((1/2 * this.mass * this.radius)**2)
         if (this.mass === 0) {
             this.inverseInertia = 0;
         } else {
@@ -136,6 +136,7 @@ class Ball {
     updatePosition() {
         this.position.x += this.velocity.x;
         this.position.y += this.velocity.y;
+        this.rotVelocity *= 0.98;
     }
 
     //system for applying a force on the ball
@@ -202,7 +203,7 @@ class Line {
 
     update() {
         this.angle += this.rotVelocity;
-        this.rotVelocity *= 0.98;
+        this.rotVelocity *= 0.95;
         let rotationMatrix = rotateMatrix(this.angle);
         let newDirection = rotationMatrix.mulVec(this.oriNormal);
         this.absoPos = this.absoPos.add(this.velocity)
@@ -320,7 +321,7 @@ let HP = 100;
 
 document.getElementById("pauseMenu").style.display = "none";
 
-let line1 = new Line(new Vec2(500, 400), new Vec2(600, 400), 10, 1)
+let line1 = new Line(new Vec2(400, 400), new Vec2(600, 400), 10, 1)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
