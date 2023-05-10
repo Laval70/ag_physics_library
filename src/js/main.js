@@ -257,6 +257,9 @@ document.addEventListener("mousedown", (event) => {
             position: player.position.add(new Vec2(directionUnit.mul(-1).y, directionUnit.mul(-1).x * -1).mul(player.radius -10)).add(directionUnit.mul(30))
         })
         onCooldown = true
+        shotAudio.pause()
+        shotAudio.currentTime = 0
+        shotAudio.play()
     }
 })
 document.addEventListener("mousemove", (event) => {
@@ -294,7 +297,7 @@ pollygons.forEach(pollygon => {
 
 
 
-
+let shotAudio = new Audio('./src/sounds/gunfire.mp3')
 
 
 // our lines can be orginized in a 2d array where the y-cord is a list of all points in a closed loop
@@ -314,7 +317,7 @@ let frameCount = 0,
     onCooldown,
     isRunning = true;
 
-let mouseX = 600;
+let mouseX = 600,
     mouseY = 300;
 
 let HP = 100;
@@ -416,5 +419,7 @@ function update(){
     friction(line1)
 
     Collision(player, line1)
+
+    
 };
 update();

@@ -245,7 +245,6 @@ function Collision(object1, object2){
 
             //object1.rotVelocity += object1.inverseInertia * collisionArm1.cross(impulseVector);
             object2.rotVelocity -= object2.inverseInertia * collisionArm2.cross(impulseVector);
-            console.log(impulseVector);
         }
     }
 }
