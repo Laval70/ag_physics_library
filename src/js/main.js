@@ -107,7 +107,7 @@ class Ball {
         this.velocity = new Vec2(0, 0);
         this.acceleration = new Vec2(0, 0);
         this.accelerationConstant = 0.1;
-        this.frictionConstant = -4
+        this.frictionConstant = -2
 
         this.angle = 0
         this.rotVelocity = 0
@@ -380,7 +380,6 @@ function update(){
         hostiles[i].updatePosition()
         hostiles[i].accelerateTo(player.position)
         friction(hostiles[i])
-        hostiles[i].draw("hsla(1, 100%, 25%, 1)")
 
         Walls.forEach(wall => {
             Collision(hostiles[i], wall)
@@ -401,6 +400,7 @@ function update(){
             }
         }
     }
+
     
     player.movement();
     player.updatePosition();
@@ -411,7 +411,7 @@ function update(){
     });
     
     
-    renderScene(pollygons, Balls);
+    renderScene(pollygons, hostiles);
 
     player.draw("hsla(1, 100%, 25%, 1)");
 

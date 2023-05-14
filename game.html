@@ -1,0 +1,28 @@
+<html>
+
+<head>
+    <script src="./src/depencencies/lib.js" defer></script>
+    <script src="./src/js/main.js" defer></script>
+    <link rel="stylesheet" href="./src/css/main.css">
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+    <nav id="pauseMenu">
+        <button onclick="timeLastFrame = performance.now();togglePause(); togglePauseMenu();;">Continue</button>
+        <button>Options (Not currently functional)</button>
+        <a href="./index.html">Exit to Menu</a>
+    </nav>
+    <nav id="options">
+        <button onclick="togglePauseMenu();" style="display: none;">Back (Not currently functional)</button>
+        
+    </nav>
+</body>
+
+</html>
