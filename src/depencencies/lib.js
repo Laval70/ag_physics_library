@@ -353,11 +353,10 @@ function RoboroKeyboard()
   };
 }
 
-function renderScene(pollygons, pov){
+function renderScene(pollygons, enemies){
 
     let directionsUnit = new Vec2(mouseX,mouseY);
     directionsUnit = directionsUnit.sub(player.position).normalise().mul(player.radius)
-
 
 
     let front = player.position.add(directionsUnit),
@@ -369,150 +368,76 @@ function renderScene(pollygons, pov){
     br = back.add(right).normalise().mul(player.radius).add(player.position),
     bl = back.add(left).normalise().mul(player.radius).add(player.position);
 
-
-    if (pov === true){
-        let frontGradient = ctx.createRadialGradient(front.x, front.y, player.radius, front.x, front.y, player.lightRadius);
-        frontGradient.addColorStop(0, "hsla(1, 100%, 100%, 0.1)");
-        frontGradient.addColorStop(1, "hsla(0, 100%, 0%, 0)");
-        let leftGradient = ctx.createRadialGradient(left.x,left.y,player.radius,left.x,left.y,player.lightRadius);
-        leftGradient.addColorStop(0, "hsla(1, 100%, 100%, 0.1)");
-        leftGradient.addColorStop(1, "hsla(0, 100%, 0%, 0)");
-        let rightGradient = ctx.createRadialGradient(right.x,right.y,player.radius,right.x,right.y,player.lightRadius);
-        rightGradient.addColorStop(0, "hsla(1, 100%, 100%, 0.1)");
-        rightGradient.addColorStop(1, "hsla(0, 100%, 0%, 0)");
-        let backGradient = ctx.createRadialGradient(back.x,back.y,player.radius,back.x,back.y,player.lightRadius);
-        backGradient.addColorStop(0, "hsla(1, 100%, 100%, 0.1)");
-        backGradient.addColorStop(1, "hsla(0, 100%, 0%, 0)");
-        
-
-        ctx.fillStyle = frontGradient;
+    // Draws a light cone to resemble the 2D pov
+    let frontGradient = ctx.createRadialGradient(player.position.x, player.position.y, player.radius, player.position.x, player.position.y, player.lightRadius + 200);
+    frontGradient.addColorStop(0, "hsla(1, 100%, 100%, 0.3)");
+    frontGradient.addColorStop(1, "hsla(0, 100%, 0%, 0)");
+    ctx.fillStyle = frontGradient;
+    let fovTriangel = new Path2D();
+    fovTriangel.moveTo(player.position.x, player.position.y)
+    fovTriangel.lineTo(
+        directionsUnit.mul(40).add(player.position).add(new Vec2(directionsUnit.y, directionsUnit.x * -1).mul(40)).x, 
+        directionsUnit.mul(40).add(player.position).add(new Vec2(directionsUnit.y, directionsUnit.x * -1).mul(60)).y
+    )
+    fovTriangel.lineTo(
+        directionsUnit.mul(40).add(player.position).add(new Vec2(directionsUnit.y * -1, directionsUnit.x).mul(40)).x, 
+        directionsUnit.mul(40).add(player.position).add(new Vec2(directionsUnit.y * -1, directionsUnit.x).mul(60)).y
+    )
+    fovTriangel.closePath()
+    ctx.fill(fovTriangel)
+    // Adds a radial light source to every laser
+    for (projectile in projectiles){
+        let lazerGradient = ctx.createRadialGradient(projectiles[projectile].position.x, 
+        projectiles[projectile].position.y, 0, 
+        projectiles[projectile].position.x, 
+        projectiles[projectile].position.y, 400);
+        lazerGradient.addColorStop(0, "hsla(1, 100%, 100%, 0.2)");
+        lazerGradient.addColorStop(1, "hsla(0, 100%, 0%, 0)");
+        ctx.fillStyle = lazerGradient;
         ctx.fillRect(0,0, canvas.width, canvas.height);
-        ctx.fillStyle = leftGradient;
-        ctx.fillRect(0,0, canvas.width, canvas.height);
-        ctx.fillStyle = rightGradient;
-        ctx.fillRect(0,0, canvas.width, canvas.height);
-        ctx.fillStyle = backGradient;
-        ctx.fillRect(0,0, canvas.width, canvas.height);
+    }
+    // draws every laser
+    for (projectile in projectiles){
+        projectiles[projectile].position = projectiles[projectile].position.add(projectiles[projectile].direction)
+        ctx.beginPath();
+        ctx.moveTo(
+            projectiles[projectile].position.add(projectiles[projectile].direction.mul(-1)).x,
+            projectiles[projectile].position.add(projectiles[projectile].direction.mul(-1)).y
+        );
+        ctx.lineTo(
+            projectiles[projectile].position.add(projectiles[projectile].direction.mul(1)).x,
+            projectiles[projectile].position.add(projectiles[projectile].direction.mul(1)).y
+        );
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "red";
+        ctx.stroke();
+    };
 
-        for (projectile in projectiles){
-            let lazerGradient = ctx.createRadialGradient(projectiles[projectile].position.x, 
-                projectiles[projectile].position.y, 0, 
-                projectiles[projectile].position.x, 
-                projectiles[projectile].position.y, 400);
-                lazerGradient.addColorStop(0, "hsla(1, 100%, 100%, 0.2)");
-                lazerGradient.addColorStop(1, "hsla(0, 100%, 0%, 0)");
-    
-                ctx.fillStyle = lazerGradient;
-                ctx.fillRect(0,0, canvas.width, canvas.height);
-            }
-
-        for (shape in pollygons){
-
-            shadow(pollygons[shape][0], pollygons[shape][pollygons[shape].length -1], front);
-            shadow(pollygons[shape][0], pollygons[shape][pollygons[shape].length -1], left);
-            shadow(pollygons[shape][0], pollygons[shape][pollygons[shape].length -1], right);
-            shadow(pollygons[shape][0], pollygons[shape][pollygons[shape].length -1], back);
-            shadow(pollygons[shape][0], pollygons[shape][pollygons[shape].length -1], fr);
-            shadow(pollygons[shape][0], pollygons[shape][pollygons[shape].length -1], fl);
-            shadow(pollygons[shape][0], pollygons[shape][pollygons[shape].length -1], br);
-            shadow(pollygons[shape][0], pollygons[shape][pollygons[shape].length -1], bl);
-
-            let shapeOutline = new Path2D();
-            shapeOutline.moveTo(pollygons[shape][0].x,pollygons[shape][0].y);
-
-            for (let i = 0; i < pollygons[shape].length-1; i++){
-
-                shapeOutline.lineTo(
-                    pollygons[shape][i+1].x,
-                    pollygons[shape][i+1].y
-                );
-
-                shadow(pollygons[shape][i], pollygons[shape][i+1], front);
-                shadow(pollygons[shape][i], pollygons[shape][i+1], left);
-                shadow(pollygons[shape][i], pollygons[shape][i+1], right)
-                shadow(pollygons[shape][i], pollygons[shape][i+1], back);
-                shadow(pollygons[shape][i], pollygons[shape][i+1], fr);
-                shadow(pollygons[shape][i], pollygons[shape][i+1], fl);
-                shadow(pollygons[shape][i], pollygons[shape][i+1], br)
-                shadow(pollygons[shape][i], pollygons[shape][i+1], bl);
-            };
-
-            shapeOutline.closePath();
-
-            ctx.fillStyle = "hsla(0, 0%, 7%, 1)";
-            ctx.fill(shapeOutline);
-
-        };
-    } else {
-        let frontGradient = ctx.createRadialGradient(player.position.x, player.position.y, player.radius, player.position.x, player.position.y, player.lightRadius + 200);
-        frontGradient.addColorStop(0, "hsla(1, 100%, 100%, 0.3)");
-        frontGradient.addColorStop(1, "hsla(0, 100%, 0%, 0)");
-
-        ctx.fillStyle = frontGradient;
-        let fovTriangel = new Path2D();
-        fovTriangel.moveTo(player.position.x, player.position.y)
-        fovTriangel.lineTo(
-            directionsUnit.mul(40).add(player.position).add(new Vec2(directionsUnit.y, directionsUnit.x * -1).mul(40)).x, 
-            directionsUnit.mul(40).add(player.position).add(new Vec2(directionsUnit.y, directionsUnit.x * -1).mul(60)).y
-        )
-        fovTriangel.lineTo(
-            directionsUnit.mul(40).add(player.position).add(new Vec2(directionsUnit.y * -1, directionsUnit.x).mul(40)).x, 
-            directionsUnit.mul(40).add(player.position).add(new Vec2(directionsUnit.y * -1, directionsUnit.x).mul(60)).y
-        )
-        fovTriangel.closePath()
-        ctx.fill(fovTriangel)
-
-        for (projectile in projectiles){
-            let lazerGradient = ctx.createRadialGradient(projectiles[projectile].position.x, 
-            projectiles[projectile].position.y, 0, 
-            projectiles[projectile].position.x, 
-            projectiles[projectile].position.y, 400);
-            lazerGradient.addColorStop(0, "hsla(1, 100%, 100%, 0.2)");
-            lazerGradient.addColorStop(1, "hsla(0, 100%, 0%, 0)");
-
-            ctx.fillStyle = lazerGradient;
-            ctx.fillRect(0,0, canvas.width, canvas.height);
+    // Draw enemies
+    enemies.forEach(enemy => {
+        if (enemy.isPlayer === false) circle(ctx, enemy.position, enemy.radius, "green")
+    });
+    // Draws every shape
+    for (shape in pollygons){
+        let shapeOutline = new Path2D();
+        shapeOutline.moveTo(pollygons[shape][0].x,pollygons[shape][0].y);
+        for (let i = 0; i < pollygons[shape].length-1; i++){
+            shapeOutline.lineTo(
+                pollygons[shape][i+1].x,
+                pollygons[shape][i+1].y
+            );
         }
-
-        for (projectile in projectiles){
-            projectiles[projectile].position = projectiles[projectile].position.add(projectiles[projectile].direction)
-            ctx.beginPath();
-            ctx.moveTo(
-                projectiles[projectile].position.add(projectiles[projectile].direction.mul(-1)).x,
-                projectiles[projectile].position.add(projectiles[projectile].direction.mul(-1)).y
-            );
-            ctx.lineTo(
-                projectiles[projectile].position.add(projectiles[projectile].direction.mul(1)).x,
-                projectiles[projectile].position.add(projectiles[projectile].direction.mul(1)).y
-            );
-            ctx.lineWidth = 3;
-            ctx.strokeStyle = "red";
-            ctx.stroke();
-        };
-
-        for (shape in pollygons){
-            let shapeOutline = new Path2D();
-            shapeOutline.moveTo(pollygons[shape][0].x,pollygons[shape][0].y);
-
-            for (let i = 0; i < pollygons[shape].length-1; i++){
-                shapeOutline.lineTo(
-                    pollygons[shape][i+1].x,
-                    pollygons[shape][i+1].y
-                );
-            }
-            
-            shapeOutline.closePath();
-
-            ctx.fillStyle = "hsla(0, 0%, 10%, 1)";
-            ctx.fill(shapeOutline);
-        };
         
-
-        for (shape in pollygons){
-            shadow(pollygons[shape][0], pollygons[shape][pollygons[shape].length -1], player.position);
-            for (let i = 0; i < pollygons[shape].length-1; i++){
-                shadow(pollygons[shape][i], pollygons[shape][i+1], player.position);
-            };
+        shapeOutline.closePath();
+        ctx.fillStyle = "hsla(0, 0%, 10%, 1)";
+        ctx.fill(shapeOutline);
+    };
+    
+    // Draws shadows for every static shape in the scene
+    for (shape in pollygons){
+        shadow(pollygons[shape][0], pollygons[shape][pollygons[shape].length -1], player.position);
+        for (let i = 0; i < pollygons[shape].length-1; i++){
+            shadow(pollygons[shape][i], pollygons[shape][i+1], player.position);
         };
     };
     // draw all seprate objects with all the light sources
@@ -521,12 +446,14 @@ function renderScene(pollygons, pov){
 function togglePause(){
     isRunning = !isRunning;
 
-    if (isRunning) update()
+    if (isRunning) animate()
 }
 function togglePauseMenu(){
     let menu = document.getElementById("pauseMenu")
     if (menu.style.display == "none")menu.style.display = "flex"
-    else if (menu.style.display == "flex")menu.style.display = "none"
+    else if (menu.style.display == "flex")menu.style.display = "none"    
+}
+function toggleOptions(){
 
 }
 function showFPS(){

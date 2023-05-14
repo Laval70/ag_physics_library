@@ -11,8 +11,7 @@ let projectiles = []
 let hostiles = []
 
 
-//a class representing vectors and adds functions for vector operations
-// Will Need updating to Canvas2D
+//2D Vector class
 class Vec2 {
     constructor(_x, _y) {
         this.x = _x;
@@ -97,7 +96,7 @@ class matrices {
         
 }
 
-// Will Need updating to Canvas2D
+
 class Ball {
     constructor(x, y, radius, mass, lightRadius) {
         this.position = new Vec2(x, y);
@@ -166,12 +165,6 @@ class Ball {
     }
 }
 
-class Square {
-    constructor() {
-
-    }
-}
-
 //basically a wall that can move, inspierd by unity
 class Line {
     constructor(pos1, pos2, thickness, mass) {
@@ -220,7 +213,6 @@ class Line {
     }
 }
 
-// Will Need updating to Canvas2D
 class Wall {
     constructor(pos1, pos2, mass, thickness) {
         this.pos1 = pos1
@@ -257,9 +249,10 @@ class Wall {
 
 
 document.addEventListener("mousedown", (event) => {
+
     if (event.button === 0 & !onCooldown) {
         let direction = new Vec2(event.clientX, event.clientY)
-        directionUnit = direction.sub(player.position).normalise()
+        let directionUnit = direction.sub(player.position).normalise()
         projectiles.push({
             direction: new Vec2(directionUnit.mul(20).x, directionUnit.mul(20).y),
             position: player.position.add(new Vec2(directionUnit.mul(-1).y, directionUnit.mul(-1).x * -1).mul(player.radius -10)).add(directionUnit.mul(30))
@@ -275,7 +268,7 @@ document.addEventListener("mousemove", (event) => {
     mouseY = event.clientY;
 })
 document.addEventListener("keydown", (event) => {
-    timeLastFrame = performance.now();
+    lastFrameTime = performance.now();
     if (event.key === "Escape") {
         togglePause();
         togglePauseMenu();
@@ -295,8 +288,6 @@ let pollygons = [
     [new Vec2(400,700), new Vec2(400,900), new Vec2(700,900), new Vec2(700,800)], // quad 3
     [new Vec2(900,700), new Vec2(1100,700), new Vec2(1100,900), new Vec2(900,900)], // quad 4
 ];
-
-
 
 pollygons.forEach(pollygon => {
     let length = pollygon.length - 1
@@ -321,11 +312,12 @@ hostileDeath.volume = 0.2;
 
 window.keyboard = new RoboroKeyboard()
 
-let timeLastFrame = performance.now();
-let deltaTime;
 
-let fps          = 0,
-    show_fps     = true;
+let currentTime = performance.now(),
+    deltaTime;
+
+let fps        = 0,
+    show_fps   = true;
 
 let frameCount = 0,
     timeCount  = 0,
@@ -338,6 +330,10 @@ let mouseX = 600,
 
 let HP = 100;
 
+const targetFps = 60;
+const frameInterval = 1000 / targetFps;
+let lastFrameTime = 0;
+
 document.getElementById("pauseMenu").style.display = "none";
 
 let line1 = new Line(new Vec2(400, 400), new Vec2(600, 400), 10, 1)
@@ -346,10 +342,10 @@ for(i = 0; i <= 10; i++) {hostiles.push(new Ball(-30, (Math.random() * canvas.he
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 function update(){
-    if (isRunning) requestAnimationFrame(update);
+    
 
-    deltaTime = (performance.now() - timeLastFrame)/1000;
-    timeLastFrame = performance.now();
+    currentTime = performance.now();
+    deltaTime = (currentTime - lastFrameTime)/1000;
 
     if (onCooldown) tick++;
     if (tick === 50) {
@@ -358,9 +354,9 @@ function update(){
     };
 
     if (!document.hasFocus() && isRunning) {
-        togglePause()
-        togglePauseMenu()
-    }
+       togglePause();
+       togglePauseMenu();
+    };
 
 
     frameCount++;
@@ -414,8 +410,8 @@ function update(){
         Collision(player, wall)
     });
     
-    renderScene(pollygons, false);
     
+    renderScene(pollygons, Balls);
 
     player.draw("hsla(1, 100%, 25%, 1)");
 
@@ -468,6 +464,14 @@ function update(){
 
     // Collision(player, line1)
 
-    
+    lastFrameTime = currentTime;
 };
-update();
+
+function animate() {
+    setTimeout(() => {
+        if (isRunning) requestAnimationFrame(animate);
+        update();
+    }, frameInterval);
+}
+
+animate();
