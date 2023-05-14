@@ -8,6 +8,7 @@ let Walls = [];
 let Balls = [];
 let Lines = [];
 let projectiles = []
+let hostiles = []
 
 
 //a class representing vectors and adds functions for vector operations
@@ -107,6 +108,7 @@ class Ball {
         this.velocity = new Vec2(0, 0);
         this.acceleration = new Vec2(0, 0);
         this.accelerationConstant = 0.1;
+        this.frictionConstant = -4
 
         this.angle = 0
         this.rotVelocity = 0
@@ -123,6 +125,8 @@ class Ball {
         } else {
             this.inverseInertia = 1 / this.inertia
         }
+
+        this.isPlayer = false
 
         Balls.push(this)
     }
@@ -155,6 +159,10 @@ class Ball {
         this.acceleration = this.acceleration.normalise();
         this.acceleration = this.acceleration.mul(this.accelerationConstant); //multiplying the acceleration direction with the amount to accelerate
         this.velocity = this.velocity.add(this.acceleration);
+    }
+
+    accelerateTo(v) {
+        this.velocity = this.velocity.add(v.sub(this.position).normalise().mul(this.accelerationConstant))
     }
 }
 
@@ -276,6 +284,9 @@ document.addEventListener("keydown", (event) => {
 
 
 const player = new Ball(500, 300, 30, 10, 800)
+player.isPlayer = true
+
+
 
 
 let pollygons = [
@@ -299,6 +310,11 @@ pollygons.forEach(pollygon => {
 
 let shotAudio = new Audio('./src/sounds/gunfire.mp3')
 
+let dmgAudio = new Audio('./src/sounds/damage.mp3')
+dmgAudio.volume = 0.2
+
+let hostileDeath = new Audio('./src/sounds/hostile-death.mp3')
+hostileDeath.volume = 0.2;
 
 // our lines can be orginized in a 2d array where the y-cord is a list of all points in a closed loop
 
@@ -325,8 +341,9 @@ let HP = 100;
 document.getElementById("pauseMenu").style.display = "none";
 
 let line1 = new Line(new Vec2(400, 400), new Vec2(600, 400), 10, 1)
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+for(i = 0; i <= 10; i++) {hostiles.push(new Ball(-30, (Math.random() * canvas.height), 30, 10, 800))}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 function update(){
     if (isRunning) requestAnimationFrame(update);
@@ -357,6 +374,37 @@ function update(){
     
     ctx.fillStyle = "hsla(0, 0%, 7%, 1)";
     ctx.fillRect(0,0, canvas.width, canvas.height);
+
+    
+    
+    for(i = 0; i < hostiles.length; i++) {
+        hostiles[i].frictionConstant = -6
+
+        Collision(player, hostiles[i])
+        hostiles[i].updatePosition()
+        hostiles[i].accelerateTo(player.position)
+        friction(hostiles[i])
+        hostiles[i].draw("hsla(1, 100%, 25%, 1)")
+
+        Walls.forEach(wall => {
+            Collision(hostiles[i], wall)
+        })
+
+        hostiles.forEach(hostile => {
+            Collision(hostiles[i], hostile)
+        })
+
+        for(j = 0; j < projectiles.length; j++) {
+            if(projectiles[j]) {
+                if (hostiles[i].position.sub(projectiles[j].position).magnitude() < hostiles[i].radius) {
+                    hostiles.splice(i, 1, new Ball(-30, (Math.random() * canvas.height), 30, 10, 800))
+                    hostileDeath.pause()
+                    hostileDeath.currentTime = 0
+                    hostileDeath.play()
+                }
+            }
+        }
+    }
     
     player.movement();
     player.updatePosition();
@@ -366,8 +414,8 @@ function update(){
         Collision(player, wall)
     });
     
-    
     renderScene(pollygons, false);
+    
 
     player.draw("hsla(1, 100%, 25%, 1)");
 
@@ -414,11 +462,11 @@ function update(){
 
     if (show_fps) showFPS();
 
-    line1.draw()
-    line1.update()
-    friction(line1)
+    // line1.draw()
+    // line1.update()
+    // friction(line1)
 
-    Collision(player, line1)
+    // Collision(player, line1)
 
     
 };

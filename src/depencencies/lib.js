@@ -1,6 +1,6 @@
 //proportionally reduces velocity to simulate friction
 function friction(object) {
-    object.velocity = object.velocity.deltaTimeAdd(object.velocity.mul(-4));
+    object.velocity = object.velocity.deltaTimeAdd(object.velocity.mul(object.frictionConstant));
 }
 
 //gets the number of pixels two objects have moved into each other between frames
@@ -148,6 +148,16 @@ function Collision(object1, object2){
 
             object1.velocity = object1.velocity.add(impulseVector.mul(object1.inverseMass));
             object2.velocity = object2.velocity.add(impulseVector.mul(-object2.inverseMass));
+
+            //below are game specific parts
+            if(object1.isPlayer) {
+                dmgAudio.pause();
+                dmgAudio.currentTime = 0
+                dmgAudio.play();
+            }
+            
+
+
         }
     } else if (object1 instanceof Ball && object2 instanceof Wall) {
         let distanceVector = object1.position.sub(distanceToLineSegment(object2.pos1, object2.pos2, object1.position, true))
