@@ -18,7 +18,7 @@ function overlapOffset(object1, object2) {
     object2.position = object2.position.add(penetrationRes.mul(-object2.inverseMass));
 }
 
-//function skapad av Marcus
+//function to get the closest point and the distance to that point from a position to a line segment
 function distanceToLineSegment(p1, p2, q, returnPoint) {
 	let u = p2.sub(p1);
 	let v = q.sub(p1);
@@ -47,6 +47,7 @@ function distanceToLineSegment(p1, p2, q, returnPoint) {
     }
 }
 
+//instead gets the closest points on two line segments
 function closestPointsOnLineSegments(l1, l2) {
     let shortestDistance = distanceToLineSegment(l2.pos1, l2.pos2, l1.pos1, true).sub(l1.pos1).magnitude();
     let closestPoints = [l1.pos1, distanceToLineSegment(l2.pos1, l2.pos2,l1.pos1, true)];
@@ -165,6 +166,7 @@ function Collision(object1, object2){
         let distanceVector = object1.position.sub(distanceToLineSegment(object2.pos1, object2.pos2, object1.position, true))
         let penetrationDepth = distanceToLineSegment(object2.pos1, object2.pos2, object1.position, false)
         if (penetrationDepth < object1.radius + (object2.thickness/2)) {
+
             //provents clipping by moving the ball out of the wall
             let penetrationRes = distanceVector.normalise().mul(object1.radius + (object2.thickness/2) - penetrationDepth)
             object1.position = object1.position.add(penetrationRes);
@@ -179,6 +181,7 @@ function Collision(object1, object2){
         let closestPoints = closestPointsOnLineSegments(object1, object2);
         let distanceVector = closestPoints[0].sub(closestPoints[1]);
         if (object1.thickness + object2.thickness >= distanceVector.magnitude()) {
+
             //provents clipping by moving the lines out of eachother
             let penetrationDepth = object1.thickness + object2.thickness - distanceVector.magnitude();
             let penetrationRes = distanceVector.normalise().mul(penetrationDepth / (object1.inverseMass + object2.inverseMass))
@@ -220,6 +223,7 @@ function Collision(object1, object2){
         let closestPoints = [object1.position, distanceToLineSegment(object2.pos1, object2.pos2, object1.position, true)];
         let distanceVector = closestPoints[0].sub(closestPoints[1]);
         if (object1.radius + object2.thickness >= distanceVector.magnitude()) {
+
             //provents clipping by moving the lines out of eachother
             let penetrationDepth = object1.radius + object2.thickness - distanceVector.magnitude();
             let penetrationRes = distanceVector.normalise().mul(penetrationDepth / (object1.inverseMass + object2.inverseMass))
@@ -255,7 +259,6 @@ function Collision(object1, object2){
             object1.velocity = object1.velocity.add(impulseVector.mul(object1.inverseMass));
             object2.velocity = object2.velocity.add(impulseVector.mul(-object2.inverseMass));
 
-            //object1.rotVelocity += object1.inverseInertia * collisionArm1.cross(impulseVector);
             object2.rotVelocity -= object2.inverseInertia * collisionArm2.cross(impulseVector);
         }
     }

@@ -73,6 +73,7 @@ class Vec2 {
 	}
 }
 
+//matrices, mostly for calculating rotation
 class matrices {
     constructor(rows, collums) {
         this.rows = rows;
@@ -162,6 +163,7 @@ class Ball {
         this.velocity = this.velocity.add(this.acceleration);
     }
 
+    //accelerates the ball towards a location
     accelerateTo(v) {
         this.velocity = this.velocity.add(v.sub(this.position).normalise().mul(this.accelerationConstant))
     }
@@ -204,6 +206,7 @@ class Line {
         circle(ctx ,this.pos2, this.thickness, "blue");
     }
 
+    //updates the position of the line acording to the ratation and original position
     update() {
         this.angle += this.rotVelocity;
         this.rotVelocity *= 0.95;
@@ -235,6 +238,7 @@ class Wall {
 
     }
 
+    //updates the position of the wall acording to the ratation and original position
     update() {
         this.angle += this.rotVelocity;
         this.rotVelocity *= 0.5;
@@ -331,16 +335,13 @@ let frameCount = 0,
 let mouseX = 600,
     mouseY = 300;
 
-let HP = 100;
-
 const targetFps = 60;
 const frameInterval = 1000 / targetFps;
 let lastFrameTime = 0;
 
 document.getElementById("pauseMenu").style.display = "none";
 
-let line1 = new Line(new Vec2(400, 400), new Vec2(600, 400), 10, 1)
-
+//creates all the hostiles
 for(i = 0; i <= 10; i++) {hostiles.push(new Ball(-30, (Math.random() * canvas.height), 30, 10, 800))}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -379,6 +380,7 @@ function update(){
     for(i = 0; i < hostiles.length; i++) {
         hostiles[i].frictionConstant = -6
 
+        //simulates the hostiles
         Collision(player, hostiles[i])
         hostiles[i].updatePosition()
         hostiles[i].accelerateTo(player.position)
@@ -393,6 +395,7 @@ function update(){
             Collision(hostiles[i], hostile)
         })
 
+        //checks every projectile against every hostile and if any hit, replaces that hostile with a new one
         for(j = 0; j < projectiles.length; j++) {
             if(projectiles[j]) {
                 if (hostiles[i].position.sub(projectiles[j].position).magnitude() < hostiles[i].radius) {
@@ -405,6 +408,7 @@ function update(){
         }
     }
     
+    //all the functions to simulate the player
     player.movement();
     player.updatePosition();
     friction(player);
@@ -462,12 +466,7 @@ function update(){
 
     if (show_fps) showFPS();
 
-    // line1.draw()
-    // line1.update()
-    // friction(line1)
-
-    // Collision(player, line1)
-
+    //ends game after hp is 0
     if(player.health == 0 && isRunning) {
         death.play()
         togglePause()
