@@ -126,6 +126,8 @@ class Ball {
         }
 
         this.isPlayer = false
+        this.health = 5
+        this.iframes = 0
 
         Balls.push(this)
     }
@@ -281,7 +283,6 @@ player.isPlayer = true
 
 
 
-
 let pollygons = [
     [new Vec2(200,200), new Vec2(400,200), new Vec2(400,400), new Vec2(200,400)], // quad 1
     [new Vec2(700,300), new Vec2(900,400), new Vec2(900,200), new Vec2(700,100)], // quad 2
@@ -306,6 +307,8 @@ dmgAudio.volume = 0.2
 
 let hostileDeath = new Audio('./src/sounds/hostile-death.mp3')
 hostileDeath.volume = 0.2;
+
+let death = new Audio('./src/sounds/game-over.mp3')
 
 // our lines can be orginized in a 2d array where the y-cord is a list of all points in a closed loop
 
@@ -405,6 +408,7 @@ function update(){
     player.movement();
     player.updatePosition();
     friction(player);
+    if(player.iframes > 0){player.iframes--}
 
     Walls.forEach(wall => {
         Collision(player, wall)
@@ -450,8 +454,8 @@ function update(){
     let healthbar = new Path2D();
     healthbar.moveTo(40, 50);
     healthbar.lineTo(40, 80);
-    healthbar.lineTo(40 + HP*2, 80);
-    healthbar.lineTo(40 + HP*2, 50);
+    healthbar.lineTo(40 + player.health*40, 80);
+    healthbar.lineTo(40 + player.health*40, 50);
     healthbar.closePath();
     ctx.fillStyle = "green";
     ctx.fill(healthbar);
@@ -463,6 +467,14 @@ function update(){
     // friction(line1)
 
     // Collision(player, line1)
+
+    if(player.health == 0 && isRunning) {
+        death.play()
+        togglePause()
+        setTimeout(() => {
+            window.location.assign("./index.html")
+        }, 3000)
+    }
 
     lastFrameTime = currentTime;
 };

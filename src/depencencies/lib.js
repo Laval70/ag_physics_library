@@ -150,7 +150,9 @@ function Collision(object1, object2){
             object2.velocity = object2.velocity.add(impulseVector.mul(-object2.inverseMass));
 
             //below are game specific parts
-            if(object1.isPlayer) {
+            if(object1.isPlayer && object1.iframes == 0) {
+                object1.health--;
+                object1.iframes = 30;
                 dmgAudio.pause();
                 dmgAudio.currentTime = 0
                 dmgAudio.play();
