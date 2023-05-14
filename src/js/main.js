@@ -400,7 +400,14 @@ function update(){
         for(j = 0; j < projectiles.length; j++) {
             if(projectiles[j]) {
                 if (hostiles[i].position.sub(projectiles[j].position).magnitude() < hostiles[i].radius) {
-                    hostiles.splice(i, 1, new Ball(-30, (Math.random() * canvas.height), 30, 10, 800))
+                    if (Math.random() < 0.5){
+                        hostiles.splice(i, 1, new Ball(-30, (Math.random() * canvas.height), 30, 10, 800))
+                    } else {
+                        hostiles.splice(i, 1, new Ball((Math.random() * canvas.width), -30, 30, 10, 800))
+                    }
+
+                    projectiles.splice(j, 1)
+                    
                     hostileDeath.pause()
                     hostileDeath.currentTime = 0
                     hostileDeath.play()
@@ -411,6 +418,9 @@ function update(){
     }
 
     
+    
+
+    
     //all the functions to simulate the player
     player.movement();
     player.updatePosition();
@@ -419,6 +429,14 @@ function update(){
 
     Walls.forEach(wall => {
         Collision(player, wall)
+
+        //laser, wall collision
+        for(i=0; i < projectiles.length; i++){
+            if(distanceToLineSegment(wall.pos1, wall.pos2, projectiles[i].position, false) < 5) {
+                projectiles.splice(i, 1)
+            }
+        };
+        
     });
     
     
