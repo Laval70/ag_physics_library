@@ -341,6 +341,8 @@ let lastFrameTime = 0;
 
 document.getElementById("pauseMenu").style.display = "none";
 
+let score = 0
+
 //creates all the hostiles
 for(i = 0; i <= 10; i++) {hostiles.push(new Ball(-30, (Math.random() * canvas.height), 30, 10, 800))}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -402,6 +404,7 @@ function update(){
                     hostileDeath.pause()
                     hostileDeath.currentTime = 0
                     hostileDeath.play()
+                    score++;
                 }
             }
         }

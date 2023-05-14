@@ -466,4 +466,5 @@ function showFPS(){
     ctx.font      = "normal 16pt Arial";
 
     ctx.fillText(Math.round(fps) + " fps", 10, 26);
+    ctx.fillText(`Score: ${score}`, 10, 45)
 }
