@@ -250,6 +250,9 @@ document.addEventListener("mousedown", (event) => {
             position: player.position.add(new Vec2(directionUnit.mul(-1).y, directionUnit.mul(-1).x * -1).mul(player.radius -10)).add(directionUnit.mul(30))
         })
         onCooldown = true
+        shotAudio.pause()
+        shotAudio.currentTime = 0
+        shotAudio.play()
     }
 })
 document.addEventListener("mousemove", (event) => {
@@ -282,6 +285,10 @@ pollygons.forEach(pollygon => {
         new Wall(pollygon[i], pollygon[i - 1], 0, 1)
     }
 });
+
+
+
+let shotAudio = new Audio('./src/sounds/gunfire.mp3')
 
 
 // our lines can be orginized in a 2d array where the y-cord is a list of all points in a closed loop
