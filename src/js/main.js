@@ -254,10 +254,26 @@ class Wall {
 }
 
 
+//fire gun with left click
 document.addEventListener("mousedown", (event) => {
 
     if (event.button === 0 & !onCooldown) {
         let direction = new Vec2(event.clientX, event.clientY)
+        let directionUnit = direction.sub(player.position).normalise()
+        projectiles.push({
+            direction: new Vec2(directionUnit.mul(20).x, directionUnit.mul(20).y),
+            position: player.position.add(new Vec2(directionUnit.mul(-1).y, directionUnit.mul(-1).x * -1).mul(player.radius -10)).add(directionUnit.mul(30))
+        })
+        onCooldown = true
+        shotAudio.pause()
+        shotAudio.currentTime = 0
+        shotAudio.play()
+    }
+})
+// fire gun with space
+document.addEventListener("keydown", (event) => {
+    if (event.keyCode === 32 & !onCooldown) {
+        let direction = new Vec2(mouseX, mouseY)
         let directionUnit = direction.sub(player.position).normalise()
         projectiles.push({
             direction: new Vec2(directionUnit.mul(20).x, directionUnit.mul(20).y),
